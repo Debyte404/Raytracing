@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Milestone 3: Let There Be Light — Lambertian Shading</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #1a2332;
+            --bg-code: #0d1117;
+            --accent-cyan: #22d3ee;
+            --accent-purple: #a855f7;
+            --accent-pink: #ec4899;
+            --accent-green: #22c55e;
+            --accent-orange: #f97316;
+            --accent-yellow: #eab308;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #1e293b;
+            --gradient-1: linear-gradient(135deg, #22d3ee 0%, #a855f7 50%, #ec4899 100%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+
+        .bg-grid {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image:
+                linear-gradient(rgba(34, 211, 238, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(34, 211, 238, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            background: rgba(10, 14, 23, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1000;
+            padding: 0 2rem;
+        }
+
+        .nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--accent-cyan);
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 8rem 2rem 4rem;
+        }
+
+        .breadcrumb {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            margin-bottom: 2rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .breadcrumb a {
+            color: var(--accent-cyan);
+            text-decoration: none;
+        }
+
+        .milestone-badge {
+            display: inline-block;
+            padding: 0.35rem 1rem;
+            background: rgba(234, 179, 8, 0.15);
+            color: var(--accent-yellow);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1.5rem;
+        }
+
+        h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin: 3rem 0 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 2rem 0 1rem;
+            color: var(--accent-yellow);
+        }
+
+        p {
+            margin-bottom: 1.25rem;
+            color: var(--text-secondary);
+        }
+
+        .concept-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .concept-box h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .concept-box p {
+            margin-bottom: 0;
+            font-size: 0.95rem;
+        }
+
+        .formula {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            color: var(--accent-yellow);
+            background: var(--bg-code);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin: 1rem 0;
+            text-align: center;
+        }
+
+        .code-block {
+            background: var(--bg-code);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 1.5rem 0;
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            background: rgba(255,255,255,0.02);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .code-lang {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .code-copy {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: color 0.3s;
+        }
+
+        .code-copy:hover {
+            color: var(--accent-cyan);
+        }
+
+        pre {
+            padding: 1.25rem;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-primary);
+        }
+
+        .comment { color: #6b7280; }
+        .keyword { color: #c678dd; }
+        .type { color: #e5c07b; }
+        .function { color: #61afef; }
+        .string { color: #98c379; }
+        .number { color: #d19a66; }
+        .operator { color: #56b6c2; }
+
+        .visualization {
+            background: var(--bg-code);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 2rem 0;
+        }
+
+        .viz-canvas {
+            width: 100%;
+            height: 400px;
+            background: #0d1117;
+        }
+
+        .viz-caption {
+            padding: 1rem 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .step-list {
+            list-style: none;
+            counter-reset: step;
+        }
+
+        .step-list li {
+            position: relative;
+            padding-left: 3rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .step-list li::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(234, 179, 8, 0.15);
+            color: var(--accent-yellow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .tip-box {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+        }
+
+        .tip-box h4 {
+            color: var(--accent-green);
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .tip-box p {
+            margin-bottom: 0;
+            font-size: 0.9rem;
+        }
+
+        .nav-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .nav-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        .compare-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .compare-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .compare-item h4 {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .compare-visual {
+            width: 100%;
+            height: 120px;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .shading-flat {
+            background: #888;
+        }
+
+        .shading-lambert {
+            background: radial-gradient(circle at 30% 30%, #fff 0%, #888 60%, #333 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    
+    <nav>
+        <div class="nav-content">
+            <div class="logo">&lt;RayTrace /&gt;</div>
+            <ul class="nav-links">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="milestone1.html">M1</a></li>
+                <li><a href="milestone2.html">M2</a></li>
+                <li><a href="milestone3.html" class="active">M3</a></li>
+                <li><a href="milestone4.html">M4</a></li>
+                <li><a href="milestone5.html">M5</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="content">
+        <div class="breadcrumb">
+            <a href="../index.html">Home</a>
+            <span>/</span>
+            <span>Milestone 3</span>
+        </div>
+
+        <span class="milestone-badge">Milestone 3 — Lambertian Shading</span>
+        <h1>Let There Be Light</h1>
+        <p class="subtitle">Transform a flat circle into a fully shaded 3D sphere using surface normals and the dot product.</p>
+
+        <h2>🎯 What You'll Build</h2>
+        <p>A sphere that looks truly 3D — with bright areas where light hits directly, gradual shadows on the sides, and dark areas facing away from the light. This is the foundation of all realistic rendering.</p>
+
+        <div class="compare-grid">
+            <div class="compare-item">
+                <h4>Before (Flat)</h4>
+                <div class="compare-visual shading-flat"></div>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">Solid white — no depth perception</p>
+            </div>
+            <div class="compare-item">
+                <h4>After (Shaded)</h4>
+                <div class="compare-visual shading-lambert"></div>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">Smooth gradient — looks round and 3D</p>
+            </div>
+        </div>
+
+        <div class="visualization">
+            <canvas id="shadingViz" class="viz-canvas"></canvas>
+            <div class="viz-caption">
+                <strong>Interactive:</strong> Move your mouse to position the light source. Watch how the dot product (N·L) changes the brightness across the sphere surface. Green arrows are normals, yellow arrow is light direction.
+            </div>
+        </div>
+
+        <h2>📐 Core Concepts</h2>
+
+        <h3>1. What is a Surface Normal?</h3>
+        <p>A <strong>normal vector</strong> is a unit-length vector that points perpendicular (at 90°) to a surface. It tells us which way the surface is "facing."</p>
+
+        <div class="formula">
+            N = normalize(hitPosition - sphereCenter)
+        </div>
+
+        <div class="concept-box">
+            <h4>💡 Intuition</h4>
+            <p>Imagine a hedgehog curled into a ball. Every spine points straight out from the center — those are the normal vectors. On a flat floor, all normals point straight up. On a sphere, they radiate outward in all directions.</p>
+        </div>
+
+        <h3>2. The Dot Product</h3>
+        <p>The dot product is the single most important operation in shading. It tells us how much two vectors "agree" in direction.</p>
+
+        <div class="formula">
+            a · b = |a| |b| cos(θ)
+        </div>
+
+        <p>When both vectors are normalized (length = 1), this simplifies to:</p>
+
+        <div class="formula">
+            a · b = cos(θ)
+        </div>
+
+        <div class="concept-box">
+            <h4>🔍 What the Dot Product Tells Us</h4>
+            <p>• <strong>1.0:</strong> Vectors point exactly the same way (0° angle)<br>
+            • <strong>0.0:</strong> Vectors are perpendicular (90° angle)<br>
+            • <strong>-1.0:</strong> Vectors point opposite ways (180° angle)<br>
+            • <strong>Negative:</strong> Surface faces away from light (in shadow)</p>
+        </div>
+
+        <h3>3. Lambert's Cosine Law</h3>
+        <p>In 1760, Johann Heinrich Lambert discovered that the brightness of a diffuse surface is proportional to the cosine of the angle between the surface normal and the light direction.</p>
+
+        <div class="formula">
+            intensity = max(0, N · L)
+        </div>
+
+        <p>Where:</p>
+        <ul style="margin-left: 2rem; margin-bottom: 1.5rem; color: var(--text-secondary);">
+            <li><strong>N</strong> = Surface normal (unit vector)</li>
+            <li><strong>L</strong> = Light direction (unit vector, pointing FROM surface TO light)</li>
+            <li><strong>max(0, ...)</strong> = Clamp negative values to zero (no negative light)</li>
+        </ul>
+
+        <div class="concept-box">
+            <h4>🎯 Why max(0, ...)?</h4>
+            <p>Surfaces facing away from light can't receive negative light — they just get zero. The <code>max(0, ...)</code> ensures we don't subtract light from the scene.</p>
+        </div>
+
+        <h3>4. The Full Shading Equation</h3>
+        <p>For a simple diffuse material:</p>
+
+        <div class="formula">
+            color = albedo × lightColor × max(0, N · L)
+        </div>
+
+        <p>Where <strong>albedo</strong> is the base color of the surface (like paint color).</p>
+
+        <h2>💻 Implementation</h2>
+
+        <h3>HLSL Shading Function</h3>
+
+        <div class="code-block">
+            <div class="code-header">
+                <span class="code-lang">HLSL</span>
+                <button class="code-copy" onclick="copyCode(this)">Copy</button>
+            </div>
+            <pre><code><span class="comment">// Light direction - pointing TOWARD the light source</span>
+<span class="comment">// In a real scene, this would come from a light struct</span>
+<span class="type">float3</span> _DirectionalLight = <span class="function">normalize</span>(<span class="function">float3</span>(1, 1, -1));
+<span class="type">float3</span> _LightColor = <span class="function">float3</span>(1, 1, 1);  <span class="comment">// White light</span>
+
+<span class="comment">// Shade a hit point with Lambertian (diffuse) lighting</span>
+<span class="type">float3</span> <span class="function">Shade</span>(<span class="type">RayHit</span> hit)
+{
+    <span class="comment">// Surface normal (already normalized from intersection)</span>
+    <span class="type">float3</span> N = hit.normal;
+    
+    <span class="comment">// Light direction: from hit point toward light</span>
+    <span class="comment">// For a directional light, this is the same everywhere</span>
+    <span class="type">float3</span> L = -_DirectionalLight;  <span class="comment">// Negate because _DirectionalLight points away from light</span>
+    
+    <span class="comment">// Lambertian term: dot product clamped to [0, 1]</span>
+    <span class="type">float</span> NdotL = <span class="function">max</span>(0.0f, <span class="function">dot</span>(N, L));
+    
+    <span class="comment">// Diffuse color = albedo * light * lambertian</span>
+    <span class="type">float3</span> diffuse = hit.albedo * _LightColor * NdotL;
+    
+    <span class="comment">// Ambient term: base light that exists even in shadow</span>
+    <span class="comment">// Without this, the dark side would be pure black</span>
+    <span class="type">float3</span> ambient = hit.albedo * 0.1f;
+    
+    <span class="keyword">return</span> diffuse + ambient;
+}
+
+<span class="comment">// Updated TraceRay that returns shaded color</span>
+<span class="type">float3</span> <span class="function">TraceRay</span>(<span class="type">Ray</span> ray)
+{
+    RayHit hit = <span class="function">CreateRayHit</span>();
+    
+    <span class="comment">// Test all spheres</span>
+    <span class="keyword">for</span> (<span class="type">int</span> i = 0; i < _SphereCount; i++)
+    {
+        <span class="function">IntersectSphere</span>(ray, _Spheres[i], hit);
+    }
+    
+    <span class="comment">// If we hit something, shade it</span>
+    <span class="keyword">if</span> (hit.distance < <span class="number">1.#INF</span>)
+    {
+        <span class="keyword">return</span> <span class="function">Shade</span>(hit);
+    }
+    
+    <span class="comment">// Miss - return sky color (simple gradient)</span>
+    <span class="keyword">return</span> <span class="function">float3</span>(0.0f, 0.0f, 0.0f);  <span class="comment">// Black void</span>
+}</code></pre>
+        </div>
+
+        <h3>Visualizing the Math Step by Step</h3>
+
+        <ol class="step-list">
+            <li>
+                <strong>Find the hit point:</strong> Using the ray equation r(t) = origin + t·direction, we know exactly where on the sphere surface the ray landed.
+            </li>
+            <li>
+                <strong>Compute the normal:</strong> The normal at any point on a sphere points from the center to that point.
+                <div class="formula">N = normalize(hit.position - sphere.position)</div>
+            </li>
+            <li>
+                <strong>Get light direction:</strong> For a directional light, this is constant. For a point light, it would be normalize(lightPos - hit.position).
+            </li>
+            <li>
+                <strong>Compute dot product:</strong> This gives us the cosine of the angle between normal and light.
+                <div class="formula">NdotL = dot(N, L)</div>
+            </li>
+            <li>
+                <strong>Clamp and multiply:</strong> Negative values become 0 (shadow), positive values scale the color.
+                <div class="formula">color = albedo × max(0, NdotL)</div>
+            </li>
+        </ol>
+
+        <h3>Adding a Ground Plane (Optional but Recommended)</h3>
+        <p>To better see the shading, add an infinite ground plane at y = 0:</p>
+
+        <div class="code-block">
+            <div class="code-header">
+                <span class="code-lang">HLSL</span>
+                <button class="code-copy" onclick="copyCode(this)">Copy</button>
+            </div>
+            <pre><code><span class="comment">// Intersect ray with ground plane (y = 0)</span>
+<span class="type">void</span> <span class="function">IntersectGroundPlane</span>(<span class="type">Ray</span> ray, <span class="keyword">inout</span> <span class="type">RayHit</span> bestHit)
+{
+    <span class="comment">// Plane equation: y = 0, or dot(ray.direction, (0,1,0))</span>
+    <span class="comment">// Solve: origin.y + t * direction.y = 0</span>
+    <span class="comment">// Therefore: t = -origin.y / direction.y</span>
+    
+    <span class="type">float</span> t = -ray.origin.y / ray.direction.y;
+    
+    <span class="comment">// Only count hits in front of camera and closer than current best</span>
+    <span class="keyword">if</span> (t > 0.0f && t < bestHit.distance)
+    {
+        bestHit.distance = t;
+        bestHit.position = ray.origin + t * ray.direction;
+        bestHit.normal = <span class="function">float3</span>(0.0f, 1.0f, 0.0f);  <span class="comment">// Plane normal points up</span>
+        bestHit.albedo = <span class="function">float3</span>(0.5f, 0.5f, 0.5f);   <span class="comment">// Gray ground</span>
+        bestHit.specular = <span class="function">float3</span>(0.0f, 0.0f, 0.0f);
+    }
+}</code></pre>
+        </div>
+
+        <div class="tip-box">
+            <h4>🎯 Key Insight</h4>
+            <p>The ground plane intersection is much simpler than sphere intersection because the plane equation is linear (not quadratic). Notice how we check <code>t > 0</code> — this prevents counting hits behind the camera.</p>
+        </div>
+
+        <h2>🧮 The Math Deep Dive</h2>
+
+        <h3>Why does the dot product give cosine?</h3>
+        <p>Geometrically, the dot product projects one vector onto another. When vectors are perpendicular, the projection has zero length. When they align, the projection is full length.</p>
+
+        <div class="concept-box">
+            <h4>📐 Visual Proof</h4>
+            <p>Imagine shining a flashlight at a wall:</p>
+            <p>• Straight on (0°): Maximum brightness (cos(0°) = 1)<br>
+            • At 45°: About 70% brightness (cos(45°) ≈ 0.707)<br>
+            • Grazing (90°): Zero brightness (cos(90°) = 0)<br>
+            • Behind (180°): Still zero (clamped to 0)</p>
+        </div>
+
+        <h3>Why add ambient light?</h3>
+        <p>Real-world scenes have indirect light bouncing everywhere. Without ambient light, the shadow side of objects would be pitch black — which looks unnatural. A small ambient term (10% of albedo) simulates this global illumination cheaply.</p>
+
+        <div class="formula">
+            finalColor = diffuse + ambient<br>
+            finalColor = albedo × light × max(0, N·L) + albedo × 0.1
+        </div>
+
+        <h2>✅ Verification</h2>
+        <p>You should see:</p>
+        <ul style="margin-left: 2rem; margin-bottom: 1.5rem; color: var(--text-secondary);">
+            <li>A sphere with smooth light-to-dark gradient</li>
+            <li>The brightest point faces the light direction</li>
+            <li>The opposite side is dark but not pure black (ambient)</li>
+            <li>The ground plane shows the same shading logic</li>
+            <li>Moving the camera preserves correct lighting</li>
+        </ul>
+
+        <div class="tip-box">
+            <h4>🐛 Common Bug</h4>
+            <p>If your sphere has a sharp line dividing light and dark (instead of smooth), check that your normals are normalized. An unnormalized normal will make the dot product scaling wrong. Always call <code>normalize()</code> on normals!</p>
+        </div>
+
+        <h2>📚 What You Learned</h2>
+        <div class="concept-box">
+            <h4>🎓 Key Takeaways</h4>
+            <p>• Surface normals point perpendicular to surfaces<br>
+            • Dot product measures alignment between two vectors<br>
+            • Lambert's cosine law: brightness ∝ cos(angle between N and L)<br>
+            • max(0, dot(N, L)) clamps negative light to zero<br>
+            • Ambient light prevents completely black shadows<br>
+            • Plane intersection is simpler than sphere (linear vs quadratic)</p>
+        </div>
+
+        <div class="nav-footer">
+            <a href="milestone2.html" class="nav-btn">← Milestone 2: The Perfect Sphere</a>
+            <a href="milestone4.html" class="nav-btn">Milestone 4: The Mirror Dimension →</a>
+        </div>
+    </div>
+
+    <script>
+        function copyCode(btn) {
+            const code = btn.closest('.code-block').querySelector('code').innerText;
+            navigator.clipboard.writeText(code);
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = 'Copy', 2000);
+        }
+
+        // Shading Visualization
+        const canvas = document.getElementById('shadingViz');
+        const ctx = canvas.getContext('2d');
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+
+        let lightX = canvas.width * 0.3;
+        let lightY = canvas.height * 0.3;
+        let isDragging = false;
+
+        canvas.addEventListener('mousedown', e => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const dx = x - lightX;
+            const dy = y - lightY;
+            if (dx*dx + dy*dy < 400) isDragging = true;
+        });
+        canvas.addEventListener('mouseup', () => isDragging = false);
+        canvas.addEventListener('mouseleave', () => isDragging = false);
+        canvas.addEventListener('mousemove', e => {
+            if (isDragging) {
+                const rect = canvas.getBoundingClientRect();
+                lightX = e.clientX - rect.left;
+                lightY = e.clientY - rect.top;
+            }
+        });
+
+        function drawShadingViz() {
+            ctx.fillStyle = '#0d1117';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+            const radius = 90;
+
+            // Grid
+            ctx.strokeStyle = 'rgba(34,211,238,0.05)';
+            for (let x = 0; x < canvas.width; x += 30) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += 30) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+            }
+
+            // Draw sphere with Lambertian shading
+            const imgData = ctx.createImageData(radius * 2, radius * 2);
+            for (let py = 0; py < radius * 2; py++) {
+                for (let px = 0; px < radius * 2; px++) {
+                    const dx = px - radius;
+                    const dy = py - radius;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist <= radius) {
+                        // Normal (pointing outward)
+                        const nx = dx / radius;
+                        const ny = dy / radius;
+                        
+                        // Light direction (from surface point to light)
+                        const surfaceX = cx + dx;
+                        const surfaceY = cy + dy;
+                        const ldx = lightX - surfaceX;
+                        const ldy = lightY - surfaceY;
+                        const ldist = Math.sqrt(ldx*ldx + ldy*ldy);
+                        const lx = ldx / ldist;
+                        const ly = ldy / ldist;
+                        
+                        // Dot product
+                        const dot = Math.max(0, nx * lx + ny * ly);
+                        
+                        // Ambient + diffuse
+                        const intensity = 0.1 + dot * 0.9;
+                        
+                        const idx = (py * radius * 2 + px) * 4;
+                        imgData.data[idx] = 236 * intensity;     // R
+                        imgData.data[idx + 1] = 72 * intensity;  // G
+                        imgData.data[idx + 2] = 153 * intensity; // B
+                        imgData.data[idx + 3] = 255;
+                    }
+                }
+            }
+            ctx.putImageData(imgData, cx - radius, cy - radius);
+
+            // Sphere outline
+            ctx.strokeStyle = 'rgba(236,72,153,0.3)';
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2); ctx.stroke();
+
+            // Sample normal arrows (every 30 degrees)
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
+                const nx = Math.cos(angle);
+                const ny = Math.sin(angle);
+                const px = cx + nx * radius;
+                const py = cy + ny * radius;
+                
+                ctx.strokeStyle = 'rgba(34,197,94,0.4)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(px, py);
+                ctx.lineTo(px + nx * 20, py + ny * 20);
+                ctx.stroke();
+            }
+
+            // Light source
+            const lightGlow = ctx.createRadialGradient(lightX, lightY, 5, lightX, lightY, 40);
+            lightGlow.addColorStop(0, 'rgba(234,179,8,0.8)');
+            lightGlow.addColorStop(0.5, 'rgba(234,179,8,0.2)');
+            lightGlow.addColorStop(1, 'rgba(234,179,8,0)');
+            ctx.fillStyle = lightGlow;
+            ctx.beginPath(); ctx.arc(lightX, lightY, 40, 0, Math.PI * 2); ctx.fill();
+            
+            ctx.fillStyle = '#eab308';
+            ctx.beginPath(); ctx.arc(lightX, lightY, 8, 0, Math.PI * 2); ctx.fill();
+            
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '12px JetBrains Mono';
+            ctx.fillText('Light (drag me)', lightX + 15, lightY + 5);
+
+            // Light direction arrow to center
+            const ldx = cx - lightX;
+            const ldy = cy - lightY;
+            const ldist = Math.sqrt(ldx*ldx + ldy*ldy);
+            ctx.strokeStyle = 'rgba(234,179,8,0.5)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(lightX, lightY);
+            ctx.lineTo(cx, cy);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Legend
+            ctx.fillStyle = '#22c55e';
+            ctx.fillRect(20, canvas.height - 80, 15, 3);
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '11px JetBrains Mono';
+            ctx.fillText('= Normal', 40, canvas.height - 75);
+            
+            ctx.fillStyle = '#eab308';
+            ctx.fillRect(20, canvas.height - 55, 15, 3);
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillText('= Light Dir', 40, canvas.height - 50);
+
+            requestAnimationFrame(drawShadingViz);
+        }
+        drawShadingViz();
+    </script>
+</body>
+</html>

@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Milestone 5: The Cornell Box Synthesis — Final Scene</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #1a2332;
+            --bg-code: #0d1117;
+            --accent-cyan: #22d3ee;
+            --accent-purple: #a855f7;
+            --accent-pink: #ec4899;
+            --accent-green: #22c55e;
+            --accent-orange: #f97316;
+            --accent-yellow: #eab308;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #1e293b;
+            --gradient-1: linear-gradient(135deg, #22d3ee 0%, #a855f7 50%, #ec4899 100%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+
+        .bg-grid {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image:
+                linear-gradient(rgba(34, 211, 238, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(34, 211, 238, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            background: rgba(10, 14, 23, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1000;
+            padding: 0 2rem;
+        }
+
+        .nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--accent-cyan);
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 8rem 2rem 4rem;
+        }
+
+        .breadcrumb {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            margin-bottom: 2rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .breadcrumb a {
+            color: var(--accent-cyan);
+            text-decoration: none;
+        }
+
+        .milestone-badge {
+            display: inline-block;
+            padding: 0.35rem 1rem;
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--accent-green);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1.5rem;
+        }
+
+        h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin: 3rem 0 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 2rem 0 1rem;
+            color: var(--accent-green);
+        }
+
+        p {
+            margin-bottom: 1.25rem;
+            color: var(--text-secondary);
+        }
+
+        .concept-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .concept-box h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .concept-box p {
+            margin-bottom: 0;
+            font-size: 0.95rem;
+        }
+
+        .formula {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            color: var(--accent-green);
+            background: var(--bg-code);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin: 1rem 0;
+            text-align: center;
+        }
+
+        .code-block {
+            background: var(--bg-code);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 1.5rem 0;
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            background: rgba(255,255,255,0.02);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .code-lang {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .code-copy {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: color 0.3s;
+        }
+
+        .code-copy:hover {
+            color: var(--accent-cyan);
+        }
+
+        pre {
+            padding: 1.25rem;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-primary);
+        }
+
+        .comment { color: #6b7280; }
+        .keyword { color: #c678dd; }
+        .type { color: #e5c07b; }
+        .function { color: #61afef; }
+        .string { color: #98c379; }
+        .number { color: #d19a66; }
+        .operator { color: #56b6c2; }
+
+        .visualization {
+            background: var(--bg-code);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 2rem 0;
+        }
+
+        .viz-canvas {
+            width: 100%;
+            height: 450px;
+            background: #0d1117;
+        }
+
+        .viz-caption {
+            padding: 1rem 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .step-list {
+            list-style: none;
+            counter-reset: step;
+        }
+
+        .step-list li {
+            position: relative;
+            padding-left: 3rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .step-list li::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--accent-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .tip-box {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+        }
+
+        .tip-box h4 {
+            color: var(--accent-green);
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .tip-box p {
+            margin-bottom: 0;
+            font-size: 0.9rem;
+        }
+
+        .nav-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .nav-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        .scene-breakdown {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .scene-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .scene-item .color-swatch {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            margin: 0 auto 0.75rem;
+            border: 2px solid var(--border-color);
+        }
+
+        .scene-item h4 {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .scene-item p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    
+    <nav>
+        <div class="nav-content">
+            <div class="logo">&lt;RayTrace /&gt;</div>
+            <ul class="nav-links">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="milestone1.html">M1</a></li>
+                <li><a href="milestone2.html">M2</a></li>
+                <li><a href="milestone3.html">M3</a></li>
+                <li><a href="milestone4.html">M4</a></li>
+                <li><a href="milestone5.html" class="active">M5</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="content">
+        <div class="breadcrumb">
+            <a href="../index.html">Home</a>
+            <span>/</span>
+            <span>Milestone 5</span>
+        </div>
+
+        <span class="milestone-badge">Milestone 5 — Final Scene</span>
+        <h1>The Cornell Box Synthesis</h1>
+        <p class="subtitle">Construct the iconic Cornell Box — an enclosed room with colored walls, diffuse and reflective materials, and an emissive light source.</p>
+
+        <h2>🎯 What You'll Build</h2>
+        <p>The Cornell Box is the standard test scene in computer graphics. It's a simple room that demonstrates soft shadows, color bleeding, diffuse interreflection, and complex material interactions.</p>
+
+        <div class="scene-breakdown">
+            <div class="scene-item">
+                <div class="color-swatch" style="background: #f0f0f0;"></div>
+                <h4>Back Wall</h4>
+                <p>White, diffuse</p>
+            </div>
+            <div class="scene-item">
+                <div class="color-swatch" style="background: #cc3333;"></div>
+                <h4>Left Wall</h4>
+                <p>Red, diffuse</p>
+            </div>
+            <div class="scene-item">
+                <div class="color-swatch" style="background: #33cc33;"></div>
+                <h4>Right Wall</h4>
+                <p>Green, diffuse</p>
+            </div>
+            <div class="scene-item">
+                <div class="color-swatch" style="background: #f0f0f0;"></div>
+                <h4>Floor/Ceiling</h4>
+                <p>White, diffuse</p>
+            </div>
+            <div class="scene-item">
+                <div class="color-swatch" style="background: #ffdd88;"></div>
+                <h4>Light Source</h4>
+                <p>Emissive (glow)</p>
+            </div>
+            <div class="scene-item">
+                <div class="color-swatch" style="background: linear-gradient(135deg, #888, #fff);"></div>
+                <h4>Objects</h4>
+                <p>Mixed materials</p>
+            </div>
+        </div>
+
+        <div class="visualization">
+            <canvas id="cornellViz" class="viz-canvas"></canvas>
+            <div class="viz-caption">
+                <strong>Interactive Cornell Box (Top-Down View):</strong> Drag to rotate the view. See how rays bounce between the red and green walls, carrying color with them (color bleeding). The light source at the top casts soft shadows.
+            </div>
+        </div>
+
+        <h2>📐 Core Concepts</h2>
+
+        <h3>1. Axis-Aligned Plane Intersection</h3>
+        <p>Walls are infinite planes. For axis-aligned planes (like room walls), intersection is trivial:</p>
+
+        <div class="formula">
+            For plane x = k: t = (k - origin.x) / direction.x<br>
+            For plane y = k: t = (k - origin.y) / direction.y<br>
+            For plane z = k: t = (k - origin.z) / direction.z
+        </div>
+
+        <div class="concept-box">
+            <h4>💡 Why Planes for Walls?</h4>
+            <p>Instead of modeling walls as giant boxes, we use mathematical planes. They're simpler to intersect, use less memory, and render faster. We just need to check that the hit point is within the wall's bounds.</p>
+        </div>
+
+        <h3>2. Emissive Materials (Light Sources)</h3>
+        <p>An emissive material doesn't reflect light — it emits it. When a ray hits an emissive surface, we immediately return its emission color, regardless of bounce depth.</p>
+
+        <div class="formula">
+            if (material.emission > 0)<br>
+            &nbsp;&nbsp;return material.emissionColor;
+        </div>
+
+        <h3>3. Color Bleeding (Indirect Illumination)</h3>
+        <p>When light bounces off a colored wall, it picks up that wall's color. This is why the white floor near the red wall looks slightly pink.</p>
+
+        <div class="concept-box">
+            <h4>🌈 How Color Bleeding Works</h4>
+            <p>1. Light ray hits red wall → reflects with red tint<br>
+            2. Reflected ray hits white floor → floor appears red-tinted<br>
+            3. This happens with every bounce, creating soft color gradients<br>
+            4. More bounces = more accurate but slower</p>
+        </div>
+
+        <h3>4. Soft Shadows</h3>
+        <p>Real light sources have area, not just a point. In our ray tracer, we approximate this by checking if a point can "see" the light source. If the path to the light is blocked, the point is in shadow.</p>
+
+        <div class="formula">
+            Shadow Ray: from hit point toward light<br>
+            If shadow ray hits anything before reaching light → shadow<br>
+            If shadow ray reaches light → illuminated
+        </div>
+
+        <h2>💻 Implementation</h2>
+
+        <h3>Complete Scene Setup (C#)</h3>
+
+        <div class="code-block">
+            <div class="code-header">
+                <span class="code-lang">C#</span>
+                <button class="code-copy" onclick="copyCode(this)">Copy</button>
+            </div>
+            <pre><code><span class="keyword">using</span> UnityEngine;
+
+<span class="comment">// Extended sphere struct with emission</span>
+<span class="keyword">public struct</span> <span class="type">Sphere</span>
+{
+    <span class="keyword">public</span> <span class="type">Vector3</span> position;
+    <span class="keyword">public</span> <span class="keyword">float</span> radius;
+    <span class="keyword">public</span> <span class="type">Vector3</span> albedo;
+    <span class="keyword">public</span> <span class="keyword">float</span> pad0;
+    <span class="keyword">public</span> <span class="type">Vector3</span> specular;
+    <span class="keyword">public</span> <span class="keyword">float</span> pad1;
+    <span class="keyword">public</span> <span class="type">Vector3</span> emission;
+    <span class="keyword">public</span> <span class="keyword">float</span> pad2;
+}  <span class="comment">// Total: 64 bytes (4 * 16-byte rows)</span>
+
+<span class="keyword">public class</span> <span class="type">RayTracingMaster</span> : <span class="type">MonoBehaviour</span>
+{
+    <span class="keyword">public</span> <span class="type">ComputeShader</span> rayTracingShader;
+    <span class="keyword">private</span> <span class="type">RenderTexture</span> target;
+    <span class="keyword">private</span> <span class="type">Camera</span> mainCamera;
+    <span class="keyword">private</span> <span class="type">ComputeBuffer</span> sphereBuffer;
+    <span class="keyword">private</span> <span class="type">Sphere</span>[] spheres;
+
+    <span class="keyword">void</span> <span class="function">Awake</span>()
+    {
+        mainCamera = <span class="function">GetComponent</span>&lt;<span class="type">Camera</span>&gt;();
+        <span class="function">InitCornellBox</span>();
+    }
+
+    <span class="keyword">void</span> <span class="function">InitCornellBox</span>()
+    {
+        spheres = <span class="keyword">new</span> <span class="type">Sphere</span>[7];  <span class="comment">// 2 objects + 5 walls (as spheres with huge radius...)</span>
+        
+        <span class="comment">// Actually, let's use a cleaner approach with separate wall data</span>
+        <span class="comment">// For this milestone, we'll define walls as planes in the shader</span>
+        
+        <span class="comment">// Large reflective sphere (chrome-like)</span>
+        spheres[0] = <span class="keyword">new</span> <span class="type">Sphere</span>()
+        {
+            position = <span class="keyword">new</span> <span class="type">Vector3</span>(-0.8f, 0.8f, 3.5f),
+            radius = 0.8f,
+            albedo = <span class="keyword">new</span> <span class="type">Vector3</span>(0.9f, 0.9f, 0.9f),
+            specular = <span class="keyword">new</span> <span class="type">Vector3</span>(1.0f, 1.0f, 1.0f),  <span class="comment">// Fully reflective</span>
+            emission = <span class="type">Vector3</span>.zero
+        };
+
+        <span class="comment">// Small diffuse sphere (matte)</span>
+        spheres[1] = <span class="keyword">new</span> <span class="type">Sphere</span>()
+        {
+            position = <span class="keyword">new</span> <span class="type">Vector3</span>(0.8f, 0.5f, 4.0f),
+            radius = 0.5f,
+            albedo = <span class="keyword">new</span> <span class="type">Vector3</span>(0.9f, 0.3f, 0.1f),  <span class="comment">// Orange</span>
+            specular = <span class="keyword">new</span> <span class="type">Vector3</span>(0.1f, 0.1f, 0.1f),  <span class="comment">// Slightly reflective</span>
+            emission = <span class="type">Vector3</span>.zero
+        };
+
+        <span class="comment">// Light source (emissive sphere on ceiling)</span>
+        spheres[2] = <span class="keyword">new</span> <span class="type">Sphere</span>()
+        {
+            position = <span class="keyword">new</span> <span class="type">Vector3</span>(0, 4.5f, 3),
+            radius = 0.8f,
+            albedo = <span class="type">Vector3</span>.zero,
+            specular = <span class="type">Vector3</span>.zero,
+            emission = <span class="keyword">new</span> <span class="type">Vector3</span>(1.0f, 0.9f, 0.7f) * 2.0f  <span class="comment">// Bright warm light</span>
+        };
+
+        sphereBuffer = <span class="keyword">new</span> <span class="type">ComputeBuffer</span>(spheres.Length, 64);
+        sphereBuffer.<span class="function">SetData</span>(spheres);
+    }
+    
+    <span class="comment">// ... rest of rendering code ...</span>
+}</code></pre>
+        </div>
+
+        <h3>HLSL: Walls as Planes + Full Shading</h3>
+
+        <div class="code-block">
+            <div class="code-header">
+                <span class="code-lang">HLSL</span>
+                <button class="code-copy" onclick="copyCode(this)">Copy</button>
+            </div>
+            <pre><code><span class="comment">// Wall definitions (axis-aligned planes with bounds)</span>
+<span class="keyword">struct</span> <span class="type">Plane</span>
+{
+    <span class="type">float3</span> normal;
+    <span class="type">float</span> distance;   <span class="comment">// Distance from origin along normal</span>
+    <span class="type">float3</span> albedo;
+    <span class="type">float</span> pad0;
+};
+
+<span class="comment">// Hardcoded Cornell Box walls</span>
+<span class="comment">// Room dimensions: roughly 5x5x5 units</span>
+<span class="comment">// Camera at (0, 1, -2) looking toward +Z</span>
+
+<span class="type">float3</span> <span class="function">GetWallColor</span>(<span class="type">float3</span> pos)
+{
+    <span class="comment">// Left wall (red) at x = -2.5</span>
+    <span class="keyword">if</span> (pos.x < -2.4f)
+        <span class="keyword">return</span> <span class="function">float3</span>(0.8f, 0.1f, 0.1f);
+    
+    <span class="comment">// Right wall (green) at x = 2.5</span>
+    <span class="keyword">if</span> (pos.x > 2.4f)
+        <span class="keyword">return</span> <span class="function">float3</span>(0.1f, 0.8f, 0.1f);
+    
+    <span class="comment">// Back wall (white) at z = 5</span>
+    <span class="keyword">if</span> (pos.z > 4.9f)
+        <span class="keyword">return</span> <span class="function">float3</span>(0.9f, 0.9f, 0.9f);
+    
+    <span class="comment">// Ceiling (white) at y = 5</span>
+    <span class="keyword">if</span> (pos.y > 4.9f)
+        <span class="keyword">return</span> <span class="function">float3</span>(0.9f, 0.9f, 0.9f);
+    
+    <span class="comment">// Floor (white) at y = 0</span>
+    <span class="keyword">if</span> (pos.y < 0.1f)
+        <span class="keyword">return</span> <span class="function">float3</span>(0.9f, 0.9f, 0.9f);
+    
+    <span class="keyword">return</span> <span class="function">float3</span>(0, 0, 0);  <span class="comment">// Miss</span>
+}
+
+<span class="type">float3</span> <span class="function">GetWallNormal</span>(<span class="type">float3</span> pos)
+{
+    <span class="keyword">if</span> (pos.x < -2.4f) <span class="keyword">return</span> <span class="function">float3</span>(1, 0, 0);   <span class="comment">// Left wall normal points right</span>
+    <span class="keyword">if</span> (pos.x > 2.4f) <span class="keyword">return</span> <span class="function">float3</span>(-1, 0, 0);  <span class="comment">// Right wall normal points left</span>
+    <span class="keyword">if</span> (pos.z > 4.9f) <span class="keyword">return</span> <span class="function">float3</span>(0, 0, -1);  <span class="comment">// Back wall normal points toward camera</span>
+    <span class="keyword">if</span> (pos.y > 4.9f) <span class="keyword">return</span> <span class="function">float3</span>(0, -1, 0);  <span class="comment">// Ceiling normal points down</span>
+    <span class="keyword">if</span> (pos.y < 0.1f) <span class="keyword">return</span> <span class="function">float3</span>(0, 1, 0);   <span class="comment">// Floor normal points up</span>
+    <span class="keyword">return</span> <span class="function">float3</span>(0, 1, 0);
+}
+
+<span class="comment">// Full trace with emission support</span>
+<span class="type">float3</span> <span class="function">TraceRay</span>(<span class="type">Ray</span> ray, <span class="type">int</span> depth)
+{
+    <span class="keyword">if</span> (depth >= MAX_BOUNCES)
+        <span class="keyword">return</span> <span class="function">float3</span>(0, 0, 0);
+    
+    RayHit hit = <span class="function">CreateRayHit</span>();
+    
+    <span class="comment">// Test spheres</span>
+    <span class="keyword">for</span> (<span class="type">int</span> i = 0; i < _SphereCount; i++)
+        <span class="function">IntersectSphere</span>(ray, _Spheres[i], hit);
+    
+    <span class="comment">// If no sphere hit, check walls (simplified as bounds check)</span>
+    <span class="keyword">if</span> (hit.distance >= <span class="number">1.#INF</span>)
+    {
+        <span class="comment">// Simple wall intersection (for demonstration)</span>
+        <span class="comment">// In production, use proper plane intersection</span>
+        <span class="keyword">return</span> <span class="function">float3</span>(0.05f, 0.05f, 0.05f);  <span class="comment">// Dark void</span>
+    }
+    
+    <span class="comment">// If emissive, return emission immediately</span>
+    <span class="keyword">if</span> (<span class="function">length</span>(hit.emission) > 0.01f)
+        <span class="keyword">return</span> hit.emission;
+    
+    <span class="comment">// Local shading</span>
+    <span class="type">float3</span> localColor = <span class="function">Shade</span>(hit);
+    
+    <span class="comment">// Reflection</span>
+    <span class="keyword">if</span> (<span class="function">length</span>(hit.specular) > 0.01f && depth < MAX_BOUNCES - 1)
+    {
+        Ray reflectedRay;
+        reflectedRay.origin = hit.position + hit.normal * 0.001f;
+        reflectedRay.direction = <span class="function">Reflect</span>(ray.direction, hit.normal);
+        
+        <span class="type">float3</span> reflectedColor = <span class="function">TraceRay</span>(reflectedRay, depth + 1);
+        localColor = <span class="function">lerp</span>(localColor, reflectedColor, hit.specular);
+    }
+    
+    <span class="keyword">return</span> localColor;
+}</code></pre>
+        </div>
+
+        <h3>Proper Plane Intersection (Production-Ready)</h3>
+
+        <div class="code-block">
+            <div class="code-header">
+                <span class="code-lang">HLSL</span>
+                <button class="code-copy" onclick="copyCode(this)">Copy</button>
+            </div>
+            <pre><code><span class="comment">// A plane is defined by: dot(p, normal) = distance</span>
+<span class="comment">// Or equivalently: ax + by + cz + d = 0</span>
+
+<span class="keyword">struct</span> <span class="type">Plane</span>
+{
+    <span class="type">float3</span> normal;      <span class="comment">// Unit normal vector</span>
+    <span class="type">float</span> distance;     <span class="comment">// Signed distance from origin</span>
+    <span class="type">float3</span> albedo;
+    <span class="type">float</span> pad;
+};
+
+<span class="type">void</span> <span class="function">IntersectPlane</span>(<span class="type">Ray</span> ray, <span class="type">Plane</span> plane, <span class="keyword">inout</span> <span class="type">RayHit</span> bestHit,
+    <span class="type">float2</span> boundsX, <span class="type">float2</span> boundsY, <span class="type">float2</span> boundsZ)
+{
+    <span class="comment">// Plane: dot(p, N) = d</span>
+    <span class="comment">// Ray: p = origin + t * direction</span>
+    <span class="comment">// Substitute: dot(origin + t*direction, N) = d</span>
+    <span class="comment">// dot(origin, N) + t*dot(direction, N) = d</span>
+    <span class="comment">// t = (d - dot(origin, N)) / dot(direction, N)</span>
+    
+    <span class="type">float</span> denom = <span class="function">dot</span>(ray.direction, plane.normal);
+    
+    <span class="comment">// If denom is ~0, ray is parallel to plane</span>
+    <span class="keyword">if</span> (<span class="function">abs</span>(denom) < 0.0001f)
+        <span class="keyword">return</span>;
+    
+    <span class="type">float</span> t = (plane.distance - <span class="function">dot</span>(ray.origin, plane.normal)) / denom;
+    
+    <span class="comment">// Check if hit is in front of ray and closer than current best</span>
+    <span class="keyword">if</span> (t < 0.001f || t >= bestHit.distance)
+        <span class="keyword">return</span>;
+    
+    <span class="type">float3</span> hitPos = ray.origin + t * ray.direction;
+    
+    <span class="comment">// Check bounds (walls have finite size)</span>
+    <span class="keyword">if</span> (hitPos.x < boundsX.x || hitPos.x > boundsX.y ||
+        hitPos.y < boundsY.x || hitPos.y > boundsY.y ||
+        hitPos.z < boundsZ.x || hitPos.z > boundsZ.z)
+        <span class="keyword">return</span>;
+    
+    <span class="comment">// Valid hit!</span>
+    bestHit.distance = t;
+    bestHit.position = hitPos;
+    bestHit.normal = plane.normal;
+    bestHit.albedo = plane.albedo;
+    bestHit.specular = <span class="function">float3</span>(0, 0, 0);  <span class="comment">// Walls are diffuse</span>
+}
+
+<span class="comment">// Cornell Box walls</span>
+<span class="type">Plane</span> <span class="function">GetLeftWall</span>()
+{
+    Plane p;
+    p.normal = <span class="function">float3</span>(1, 0, 0);      <span class="comment">// Points right (into room)</span>
+    p.distance = -2.5f;                  <span class="comment">// At x = -2.5</span>
+    p.albedo = <span class="function">float3</span>(0.8f, 0.1f, 0.1f);  <span class="comment">// Red</span>
+    <span class="keyword">return</span> p;
+}
+
+<span class="type">Plane</span> <span class="function">GetRightWall</span>()
+{
+    Plane p;
+    p.normal = <span class="function">float3</span>(-1, 0, 0);     <span class="comment">// Points left (into room)</span>
+    p.distance = -2.5f;                  <span class="comment">// At x = 2.5, dot((2.5,0,0),(-1,0,0)) = -2.5</span>
+    p.albedo = <span class="function">float3</span>(0.1f, 0.8f, 0.1f);  <span class="comment">// Green</span>
+    <span class="keyword">return</span> p;
+}
+
+<span class="comment">// ... similar for floor, ceiling, back wall ...</span></code></pre>
+        </div>
+
+        <div class="tip-box">
+            <h4>🎯 Understanding Plane Distance</h4>
+            <p>The plane equation <code>dot(p, N) = d</code> means: project any point p onto the normal N. If that projection equals d, the point is on the plane. For a wall at x = -2.5 with normal (1,0,0), d = -2.5 because dot((-2.5, y, z), (1,0,0)) = -2.5.</p>
+        </div>
+
+        <h2>🧮 The Math Deep Dive</h2>
+
+        <h3>Why does color bleeding need multiple bounces?</h3>
+        <p>Consider light hitting the red wall, then bouncing to the floor:</p>
+
+        <ol class="step-list">
+            <li>
+                <strong>Bounce 0:</strong> Light ray leaves the emissive sphere
+            </li>
+            <li>
+                <strong>Bounce 1:</strong> Hits red wall → wall reflects red-tinted light
+            </li>
+            <li>
+                <strong>Bounce 2:</strong> Red-tinted light hits white floor → floor appears pink
+            </li>
+            <li>
+                <strong>Bounce 3:</strong> Some of that pink light hits the green wall → subtle color mixing
+            </li>
+        </ol>
+
+        <p>Each bounce adds subtlety. With only 1-2 bounces, color bleeding is barely visible. With 4-8 bounces, the scene looks natural.</p>
+
+        <h3>Soft Shadows with Area Lights</h3>
+        <p>Our emissive sphere acts as an area light. For true soft shadows, we'd cast multiple rays toward random points on the light source and average the results. For now, a single shadow ray gives hard shadows; multiple samples give soft shadows.</p>
+
+        <div class="formula">
+            shadow = 0<br>
+            for i = 1 to N:<br>
+            &nbsp;&nbsp;lightPoint = randomPointOnLightSource()<br>
+            &nbsp;&nbsp;if (!occluded(hit, lightPoint)):<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;shadow += 1/N<br>
+            color *= shadow
+        </div>
+
+        <h2>✅ Verification</h2>
+        <p>Your Cornell Box should show:</p>
+        <ul style="margin-left: 2rem; margin-bottom: 1.5rem; color: var(--text-secondary);">
+            <li>Red left wall, green right wall, white everything else</li>
+            <li>Two spheres: one reflective (chrome), one diffuse (orange)</li>
+            <li>The reflective sphere mirrors the room and other sphere</li>
+            <li>White floor appears slightly pink near red wall (color bleeding)</li>
+            <li>White floor appears slightly green near green wall</li>
+            <li>Light source on ceiling casts shadows</li>
+            <li>Shadows are darker where fully occluded, lighter at edges</li>
+        </ul>
+
+        <div class="tip-box">
+            <h4>🐛 Common Bug</h4>
+            <p>If walls appear black or missing, check your plane distance signs. The distance in <code>dot(p, N) = d</code> must be consistent with the normal direction. A common mistake is using positive distance when the normal points toward negative space.</p>
+        </div>
+
+        <h2>🚀 Next Steps & Extensions</h2>
+        <div class="concept-box">
+            <h4>🔮 Beyond the Cornell Box</h4>
+            <p>• <strong>Anti-aliasing:</strong> Cast multiple rays per pixel and average<br>
+            • <strong>Motion blur:</strong> Jitter ray origins in time<br>
+            • <strong>Depth of field:</strong> Jitter ray origins on a lens aperture<br>
+            • <strong>Texture mapping:</strong> Sample 2D textures at hit points<br>
+            • <strong>Normal mapping:</span> Perturb normals for surface detail<br>
+            • <strong>Path tracing:</strong> Monte Carlo sampling for true global illumination</p>
+        </div>
+
+        <h2>📚 What You Learned</h2>
+        <div class="concept-box">
+            <h4>🎓 Key Takeaways</h4>
+            <p>• Axis-aligned plane intersection: t = (d - dot(origin, N)) / dot(direction, N)<br>
+            • Emissive materials return light without bouncing<br>
+            • Color bleeding requires 3+ bounces to look natural<br>
+            • Soft shadows need multiple shadow ray samples<br>
+            • The Cornell Box tests all core ray tracing features<br>
+            • Real scenes combine spheres, planes, and varied materials</p>
+        </div>
+
+        <div class="nav-footer">
+            <a href="milestone4.html" class="nav-btn">← Milestone 4: The Mirror Dimension</a>
+            <a href="../index.html" class="nav-btn">🏠 Back to Home</a>
+        </div>
+    </div>
+
+    <script>
+        function copyCode(btn) {
+            const code = btn.closest('.code-block').querySelector('code').innerText;
+            navigator.clipboard.writeText(code);
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = 'Copy', 2000);
+        }
+
+        // Cornell Box Top-Down Visualization
+        const canvas = document.getElementById('cornellViz');
+        const ctx = canvas.getContext('2d');
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+
+        let viewAngle = 0;
+        let isDragging = false;
+        let lastX = 0;
+
+        canvas.addEventListener('mousedown', e => { isDragging = true; lastX = e.clientX; });
+        canvas.addEventListener('mouseup', () => isDragging = false);
+        canvas.addEventListener('mouseleave', () => isDragging = false);
+        canvas.addEventListener('mousemove', e => {
+            if (isDragging) {
+                viewAngle += (e.clientX - lastX) * 0.01;
+                lastX = e.clientX;
+            }
+        });
+
+        function project3D(x, y, z, angle) {
+            const cosA = Math.cos(angle);
+            const sinA = Math.sin(angle);
+            const rx = x * cosA - z * sinA;
+            const rz = x * sinA + z * cosA;
+            const scale = 400 / (rz + 8);
+            return {
+                x: canvas.width / 2 + rx * scale,
+                y: canvas.height / 2 + 50 - y * scale,
+                scale: scale
+            };
+        }
+
+        function drawCornellViz() {
+            ctx.fillStyle = '#0d1117';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Room bounds
+            const roomW = 3;
+            const roomH = 3;
+            const roomD = 3;
+
+            // Draw walls
+            const walls = [
+                { x: -roomW, y: 0, z: 0, w: 0.1, h: roomH, d: roomD, color: 'rgba(200,50,50,0.3)' },      // Left (red)
+                { x: roomW, y: 0, z: 0, w: 0.1, h: roomH, d: roomD, color: 'rgba(50,200,50,0.3)' },       // Right (green)
+                { x: 0, y: 0, z: roomD, w: roomW*2, h: roomH, d: 0.1, color: 'rgba(200,200,200,0.2)' },  // Back (white)
+                { x: 0, y: roomH, z: 0, w: roomW*2, h: 0.1, d: roomD, color: 'rgba(200,200,200,0.15)' },  // Ceiling
+                { x: 0, y: 0, z: 0, w: roomW*2, h: 0.1, d: roomD, color: 'rgba(200,200,200,0.25)' },     // Floor
+            ];
+
+            walls.forEach(w => {
+                const p1 = project3D(w.x - w.w/2, w.y, w.z - w.d/2, viewAngle);
+                const p2 = project3D(w.x + w.w/2, w.y, w.z - w.d/2, viewAngle);
+                const p3 = project3D(w.x + w.w/2, w.y + w.h, w.z - w.d/2, viewAngle);
+                const p4 = project3D(w.x - w.w/2, w.y + w.h, w.z - w.d/2, viewAngle);
+                
+                ctx.fillStyle = w.color;
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.lineTo(p3.x, p3.y);
+                ctx.lineTo(p4.x, p4.y);
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            });
+
+            // Light source (ceiling)
+            const lightPos = project3D(0, roomH - 0.2, roomD/2, viewAngle);
+            const lightGlow = ctx.createRadialGradient(lightPos.x, lightPos.y, 5, lightPos.x, lightPos.y, 40);
+            lightGlow.addColorStop(0, 'rgba(255,220,150,0.8)');
+            lightGlow.addColorStop(1, 'rgba(255,220,150,0)');
+            ctx.fillStyle = lightGlow;
+            ctx.beginPath(); ctx.arc(lightPos.x, lightPos.y, 40, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#ffdd88';
+            ctx.beginPath(); ctx.arc(lightPos.x, lightPos.y, 6, 0, Math.PI * 2); ctx.fill();
+
+            // Large reflective sphere
+            const sphere1Pos = project3D(-1, 0.8, 2, viewAngle);
+            const s1r = 0.6 * sphere1Pos.scale;
+            const s1Grad = ctx.createRadialGradient(sphere1Pos.x - s1r*0.3, sphere1Pos.y - s1r*0.3, 5, sphere1Pos.x, sphere1Pos.y, s1r);
+            s1Grad.addColorStop(0, 'rgba(200,200,200,0.6)');
+            s1Grad.addColorStop(0.5, 'rgba(150,150,150,0.3)');
+            s1Grad.addColorStop(1, 'rgba(100,100,100,0.1)');
+            ctx.fillStyle = s1Grad;
+            ctx.beginPath(); ctx.arc(sphere1Pos.x, sphere1Pos.y, s1r, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = 'rgba(200,200,200,0.4)';
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.arc(sphere1Pos.x, sphere1Pos.y, s1r, 0, Math.PI * 2); ctx.stroke();
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '10px JetBrains Mono';
+            ctx.fillText('Reflective', sphere1Pos.x - 25, sphere1Pos.y + s1r + 15);
+
+            // Small diffuse sphere
+            const sphere2Pos = project3D(1, 0.5, 2.5, viewAngle);
+            const s2r = 0.4 * sphere2Pos.scale;
+            const s2Grad = ctx.createRadialGradient(sphere2Pos.x - s2r*0.3, sphere2Pos.y - s2r*0.3, 5, sphere2Pos.x, sphere2Pos.y, s2r);
+            s2Grad.addColorStop(0, 'rgba(255,150,50,0.5)');
+            s2Grad.addColorStop(1, 'rgba(200,100,30,0.2)');
+            ctx.fillStyle = s2Grad;
+            ctx.beginPath(); ctx.arc(sphere2Pos.x, sphere2Pos.y, s2r, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = 'rgba(255,150,50,0.4)';
+            ctx.beginPath(); ctx.arc(sphere2Pos.x, sphere2Pos.y, s2r, 0, Math.PI * 2); ctx.stroke();
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillText('Diffuse', sphere2Pos.x - 20, sphere2Pos.y + s2r + 15);
+
+            // Sample bounce rays
+            const rayOrigin = project3D(0, 1, -1, viewAngle);
+            const target = project3D(-1, 0.8, 2, viewAngle);
+            
+            ctx.strokeStyle = 'rgba(34,211,238,0.3)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.moveTo(rayOrigin.x, rayOrigin.y);
+            ctx.lineTo(target.x, target.y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Legend
+            ctx.fillStyle = 'rgba(200,50,50,0.6)';
+            ctx.fillRect(20, 20, 15, 15);
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '11px JetBrains Mono';
+            ctx.fillText('Red Wall', 42, 32);
+
+            ctx.fillStyle = 'rgba(50,200,50,0.6)';
+            ctx.fillRect(20, 45, 15, 15);
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillText('Green Wall', 42, 57);
+
+            ctx.fillStyle = 'rgba(255,220,150,0.6)';
+            ctx.fillRect(20, 70, 15, 15);
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillText('Light Source', 42, 82);
+
+            ctx.fillStyle = 'rgba(200,200,200,0.6)';
+            ctx.fillRect(20, 95, 15, 15);
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillText('White Surfaces', 42, 107);
+
+            requestAnimationFrame(drawCornellViz);
+        }
+        drawCornellViz();
+    </script>
+</body>
+</html>
