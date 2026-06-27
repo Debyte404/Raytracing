@@ -8,16 +8,29 @@ float3 _CameraPosition;
 float4x4 _CameraToWorld;
 float4x4 _CameraInverseProjection;
 
+struct MaterialProperty
+{
+    float3 color;
+    float emissionStrength;
+    float3 emissionColor;
+    float roughness;
+};
+
 struct Sphere
 {
     float3 position;
     float radius;
+    MaterialProperty material;
 };
+
 
 struct hitInfo
 {
+    bool didHit;
+    float dst;
     float3 hitpoint;
     float3 normal;
+    MaterialProperty material;
 };
 
 struct Ray
@@ -26,6 +39,54 @@ struct Ray
     float3 rayDir;
     hitInfo HitInfo;
 };
+
+
+StructuredBuffer<Sphere> _Spheres;
+int _SphereCount;
+
+hitInfo RaySphere(Ray ray, Sphere sphere)
+{
+    hitInfo hit;
+    hit.didHit = false;
+    hit.dst = 1.#INF;
+    hit.hitpoint = 0;
+    hit.normal = 0;
+    hit.material = sphere.material;
+
+    float3 offset = ray.rayOrigin - sphere.position;
+
+    float a = dot(ray.rayDir, ray.rayDir);
+    float b = 2.0 * dot(offset, ray.rayDir);
+    float c = dot(offset, offset) - sphere.radius * sphere.radius;
+
+    float discriminant = b * b - 4.0 * a * c;
+
+    if (discriminant < 0)
+    {
+        return hit;
+    }
+
+    float sqrtDiscriminant = sqrt(discriminant);
+
+    float t1 = (-b - sqrtDiscriminant) / (2.0 * a);
+    float t2 = (-b + sqrtDiscriminant) / (2.0 * a);
+
+    float dst = t1 > 0 ? t1 : t2;
+
+    if (dst <= 0)
+    {
+        return hit;
+    }
+
+    hit.didHit = true;
+    hit.dst = dst;
+    hit.hitpoint = ray.rayOrigin + ray.rayDir * dst;
+    hit.normal = normalize(hit.hitpoint - sphere.position);
+    hit.material = sphere.material;
+
+    return hit;
+}
+
 
 [numthreads(8,8,1)]
 void HelloWorld(uint3 id : SV_DispatchThreadID)
@@ -49,9 +110,34 @@ void HelloWorld(uint3 id : SV_DispatchThreadID)
     float3 worldTarget = mul(_CameraToWorld, viewTarget).xyz;
     
     Ray ray;
+    ray.HitInfo.didHit = false;
+    ray.HitInfo.dst = 1.#INF;
+    ray.HitInfo.hitpoint = 0;
+    ray.HitInfo.normal = 0;
     
     ray.rayOrigin = _CameraPosition;
     ray.rayDir = normalize(worldTarget - ray.rayOrigin);
     
-    Result[id.xy] = float4(2*(ray.rayDir - 0.5), 1);
+    for (int i = 0; i < _SphereCount; i++)
+    {
+        hitInfo currentHit = RaySphere(ray, _Spheres[i]);
+
+        if (currentHit.didHit && currentHit.dst < ray.HitInfo.dst)
+        {
+            ray.HitInfo = currentHit;
+        }
+    }
+    
+    //Result[id.xy] = float4(2*(ray.rayDir - 0.5), 1);
+    if (ray.HitInfo.didHit)
+    {
+        //float3 litColor = ray.HitInfo.material.color * (ray.HitInfo.normal * 0.5 + 0.5);
+        float3 litColor = ray.HitInfo.material.color;
+        float3 emission = ray.HitInfo.material.emissionColor * ray.HitInfo.material.emissionStrength;
+        Result[id.xy] = float4(litColor + emission, 1);
+    }
+    else
+    {
+        Result[id.xy] = float4(0, 0, 0, 1);
+    }
 }

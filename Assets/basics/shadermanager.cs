@@ -1,5 +1,4 @@
 using UnityEngine;
-using static shadermanager;
 
 [ExecuteAlways]
 [ImageEffectAllowedInSceneView]
@@ -24,10 +23,18 @@ public class shadermanager : MonoBehaviour
     public RaytracingSphere[] Spheres;
     private ComputeBuffer sphereBuffer;
 
+    struct MaterialPropertyData
+    {
+        public Vector3 color;
+        public float emissionStrength;
+        public Vector3 emissionColor;
+        public float roughness;
+    }
     struct SphereData
     {
         public Vector3 position;
         public float radius;
+        public MaterialPropertyData material;
     }
 
     void OnEnable()
@@ -43,34 +50,67 @@ public class shadermanager : MonoBehaviour
 
     void UpdateSphereBuffer()
     {
-        if (Spheres == null)
+        if (Spheres == null || Spheres.Length == 0)
         {
+            ReleaseSphereBuffer();
             testingshader.SetInt("_SphereCount", 0);
             return;
         }
 
-        SphereData[] sphereData = new SphereData[Spheres.Length];
+        int validSphereCount = 0;
+        for (int i = 0; i < Spheres.Length; i++)
+        {
+            if (Spheres[i] != null)
+            {
+                validSphereCount++;
+            }
+        }
 
+        if (validSphereCount == 0)
+        {
+            ReleaseSphereBuffer();
+            testingshader.SetInt("_SphereCount", 0);
+            return;
+        }
+
+        SphereData[] sphereData = new SphereData[validSphereCount];
+
+        int sphereDataIndex = 0;
         for (int i = 0; i < Spheres.Length; i++)
         {
             if (Spheres[i] == null)
+            {
                 continue;
+            }
 
-            sphereData[i] = new SphereData
+            sphereData[sphereDataIndex] = new SphereData
             {
                 position = Spheres[i].Position,
                 radius = Spheres[i].Radius,
+                material = new MaterialPropertyData
+                {
+                    color = new Vector3(
+                        Spheres[i].materialProperty.color.r,
+                        Spheres[i].materialProperty.color.g,
+                        Spheres[i].materialProperty.color.b
+                    ),
+                    emissionStrength = Spheres[i].materialProperty.emissionStrength,
+                    emissionColor = new Vector3(
+                        Spheres[i].materialProperty.emissionColor.r,
+                        Spheres[i].materialProperty.emissionColor.g,
+                        Spheres[i].materialProperty.emissionColor.b
+                    ),
+                    roughness = Spheres[i].materialProperty.roughness
+                }
             };
+
+            sphereDataIndex++;
         }
 
         if (sphereBuffer == null || sphereBuffer.count != sphereData.Length)
         {
-            if (sphereBuffer != null)
-            {
-                sphereBuffer.Release();
-            }
-
-            sphereBuffer = new ComputeBuffer(sphereData.Length, sizeof(float) * 4);
+            ReleaseSphereBuffer();
+            sphereBuffer = new ComputeBuffer(sphereData.Length, sizeof(float) * 12);
         }
 
         sphereBuffer.SetData(sphereData);
@@ -171,26 +211,43 @@ public class shadermanager : MonoBehaviour
         }
     }
 
-    void OnDestroy()
+    void ReleaseSphereBuffer()
     {
         if (sphereBuffer != null)
         {
             sphereBuffer.Release();
             sphereBuffer = null;
         }
+    }
 
-        if (renderTexture != null)
+    void ReleaseTargetTexture()
+    {
+        if (renderTexture == null)
         {
-            renderTexture.Release();
-            if (Application.isPlaying)
-            {
-                Destroy(renderTexture);
-            }
-            else
-            {
-                DestroyImmediate(renderTexture);
-            }
-            renderTexture = null;
+            return;
         }
+
+        renderTexture.Release();
+        if (Application.isPlaying)
+        {
+            Destroy(renderTexture);
+        }
+        else
+        {
+            DestroyImmediate(renderTexture);
+        }
+        renderTexture = null;
+    }
+
+    void OnDisable()
+    {
+        ReleaseSphereBuffer();
+        ReleaseTargetTexture();
+    }
+
+    void OnDestroy()
+    {
+        ReleaseSphereBuffer();
+        ReleaseTargetTexture();
     }
 }
