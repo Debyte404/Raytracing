@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unity Setup Guide for Ray Tracing Beginners</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #1a2332;
+            --bg-code: #0d1117;
+            --accent-cyan: #22d3ee;
+            --accent-purple: #a855f7;
+            --accent-pink: #ec4899;
+            --accent-green: #22c55e;
+            --accent-orange: #f97316;
+            --accent-yellow: #eab308;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #1e293b;
+            --gradient-1: linear-gradient(135deg, #22d3ee 0%, #a855f7 50%, #ec4899 100%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+
+        .bg-grid {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image:
+                linear-gradient(rgba(34, 211, 238, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(34, 211, 238, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            background: rgba(10, 14, 23, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1000;
+            padding: 0 2rem;
+        }
+
+        .nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-cyan);
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 8rem 2rem 4rem;
+        }
+
+        h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin: 3rem 0 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 2rem 0 1rem;
+            color: var(--accent-cyan);
+        }
+
+        p {
+            margin-bottom: 1.25rem;
+            color: var(--text-secondary);
+        }
+
+        .concept-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .concept-box h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .concept-box p {
+            margin-bottom: 0;
+            font-size: 0.95rem;
+        }
+
+        .warning-box {
+            background: rgba(249, 115, 22, 0.1);
+            border: 1px solid rgba(249, 115, 22, 0.2);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+        }
+
+        .warning-box h4 {
+            color: var(--accent-orange);
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .warning-box p {
+            margin-bottom: 0;
+            font-size: 0.9rem;
+        }
+
+        .tip-box {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+        }
+
+        .tip-box h4 {
+            color: var(--accent-green);
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .tip-box p {
+            margin-bottom: 0;
+            font-size: 0.9rem;
+        }
+
+        .step-list {
+            list-style: none;
+            counter-reset: step;
+        }
+
+        .step-list li {
+            position: relative;
+            padding-left: 3.5rem;
+            margin-bottom: 2rem;
+            min-height: 3rem;
+        }
+
+        .step-list li::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(34, 211, 238, 0.15);
+            color: var(--accent-cyan);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .screenshot-placeholder {
+            background: var(--bg-code);
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            margin: 1rem 0;
+            color: var(--text-muted);
+        }
+
+        .code-block {
+            background: var(--bg-code);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 1.5rem 0;
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            background: rgba(255,255,255,0.02);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .code-lang {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        pre {
+            padding: 1.25rem;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-primary);
+        }
+
+        .comment { color: #6b7280; }
+        .keyword { color: #c678dd; }
+        .type { color: #e5c07b; }
+        .function { color: #61afef; }
+        .string { color: #98c379; }
+
+        .nav-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .nav-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        .formula {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            color: var(--accent-cyan);
+            background: var(--bg-code);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin: 1rem 0;
+            text-align: center;
+        }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .two-col { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    
+    <nav>
+        <div class="nav-content">
+            <div class="logo">&lt;RayTrace /&gt;</div>
+            <ul class="nav-links">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="milestone1.html">M1</a></li>
+                <li><a href="milestone2.html">M2</a></li>
+                <li><a href="milestone3.html">M3</a></li>
+                <li><a href="milestone4.html">M4</a></li>
+                <li><a href="milestone5.html">M5</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="content">
+        <h1>🎮 Unity Setup for Complete Beginners</h1>
+        <p class="subtitle">Everything you need to know to run the ray tracer — from fixing the code editor error to understanding how scenes work.</p>
+
+        <h2>🔧 Fixing the "External Code Editor" Error</h2>
+        <p>Unity is trying to open your C# scripts in <strong>JetBrains Rider</strong>, but it's not installed at the path Unity expects. Here's how to fix it:</p>
+
+        <ol class="step-list">
+            <li>
+                <strong>Open Unity's Preferences</strong><br>
+                Go to <code>Edit → Preferences</code> (Windows) or <code>Unity → Settings</code> (Mac).
+                <div class="screenshot-placeholder">[Unity Preferences Window]</div>
+            </li>
+            <li>
+                <strong>Go to External Tools</strong><br>
+                Click "External Tools" in the left sidebar.
+            </li>
+            <li>
+                <strong>Choose your code editor</strong><br>
+                In the "External Script Editor" dropdown, select one of:
+                <ul style="margin-top: 0.5rem; margin-left: 1.5rem; color: var(--text-secondary);">
+                    <li><strong>Visual Studio</strong> (if installed — recommended for beginners)</li>
+                    <li><strong>Visual Studio Code</strong> (lightweight, free)</li>
+                    <li><strong>Notepad++</strong> (simple text editor)</li>
+                    <li>Or click "Browse..." and find your preferred editor</li>
+                </ul>
+            </li>
+            <li>
+                <strong>Click "Regenerate project files"</strong><br>
+                This makes Unity recreate the .csproj files so your editor understands the project.
+            </li>
+        </ol>
+
+        <div class="tip-box">
+            <h4>💡 Recommendation for Beginners</h4>
+            <p>Download <strong>Visual Studio Community</strong> (free) from Microsoft's website. It's the easiest option for Unity development and has the best integration.</p>
+        </div>
+
+        <h2>📁 Understanding the Unity Project Structure</h2>
+        <p>Your project folder contains these important folders:</p>
+
+        <div class="two-col">
+            <div class="concept-box">
+                <h4>📂 Assets/</h4>
+                <p>ALL your game files live here:<br>
+                • Scripts (C# files)<br>
+                • Shaders (.compute files)<br>
+                • Models, textures, sounds<br>
+                • Scenes (.unity files)</p>
+            </div>
+            <div class="concept-box">
+                <h4>📂 Scenes/</h4>
+                <p>A "Scene" is like a level or a room. It contains:<br>
+                • GameObjects (camera, lights, etc.)<br>
+                • Their positions and settings<br>
+                • Scripts attached to them</p>
+            </div>
+        </div>
+
+        <div class="warning-box">
+            <h4>⚠️ Never Touch These Folders</h4>
+            <p>Don't manually edit files in <code>Library/</code>, <code>Temp/</code>, or <code>Logs/</code>. They're generated by Unity and will be overwritten.</p>
+        </div>
+
+        <h2>🎯 Step-by-Step: Running the Ray Tracer</h2>
+
+        <h3>Step 1: Create the Compute Shader</h3>
+        <ol class="step-list">
+            <li>
+                <strong>In Unity's Project window</strong> (bottom panel), right-click in the Assets folder.
+            </li>
+            <li>
+                <strong>Select Create → Shader → Compute Shader</strong>
+            </li>
+            <li>
+                <strong>Name it "RayTracingShader"</strong> and press Enter.
+            </li>
+            <li>
+                <strong>Double-click it</strong> to open in your code editor.
+            </li>
+            <li>
+                <strong>Replace ALL the content</strong> with the code from the RayTracingShader.compute file.
+            </li>
+            <li>
+                <strong>Save the file</strong> (Ctrl+S).
+            </li>
+        </ol>
+
+        <div class="tip-box">
+            <h4>🎯 What is a Compute Shader?</h4>
+            <p>A compute shader is a program that runs on your <strong>GPU</strong> (graphics card) instead of your CPU. It can run thousands of calculations in parallel — perfect for processing every pixel on screen at once.</p>
+        </div>
+
+        <h3>Step 2: Create the C# Script</h3>
+        <ol class="step-list">
+            <li>
+                <strong>In the Project window</strong>, right-click in Assets.
+            </li>
+            <li>
+                <strong>Select Create → C# Script</strong>
+            </li>
+            <li>
+                <strong>Name it "RayTracingMaster"</strong> (the name MUST match the class name inside!).
+            </li>
+            <li>
+                <strong>Double-click it</strong> to open in your code editor.
+            </li>
+            <li>
+                <strong>Replace ALL the content</strong> with the code from the RayTracingMaster.cs file.
+            </li>
+            <li>
+                <strong>Save the file</strong> (Ctrl+S).
+            </li>
+        </ol>
+
+        <h3>Step 3: Set Up the Scene</h3>
+        <ol class="step-list">
+            <li>
+                <strong>In the Hierarchy window</strong> (left panel), find "Main Camera".
+            </li>
+            <li>
+                <strong>Click on Main Camera</strong> to select it.
+            </li>
+            <li>
+                <strong>In the Inspector window</strong> (right panel), click "Add Component".
+            </li>
+            <li>
+                <strong>Type "RayTracingMaster"</strong> and click it.
+            </li>
+            <li>
+                <strong>You should see a new component</strong> appear on the Camera with these fields:
+                <ul style="margin-top: 0.5rem; margin-left: 1.5rem; color: var(--text-secondary);">
+                    <li>Ray Tracing Shader (empty slot)</li>
+                    <li>Render In Scene View (checked)</li>
+                    <li>Add Test Sphere (checked)</li>
+                </ul>
+            </li>
+        </ol>
+
+        <h3>Step 4: Link the Shader</h3>
+        <ol class="step-list">
+            <li>
+                <strong>With Main Camera still selected</strong>, look at the RayTracingMaster component.
+            </li>
+            <li>
+                <strong>Drag "RayTracingShader" from the Project window</strong> into the "Ray Tracing Shader" slot.
+            </li>
+            <li>
+                <strong>OR click the small circle</strong> on the right of the slot and select it from the list.
+            </li>
+        </ol>
+
+        <div class="screenshot-placeholder">[Inspector showing RayTracingMaster with shader assigned]</div>
+
+        <h3>Step 5: Press Play!</h3>
+        <ol class="step-list">
+            <li>
+                <strong>Click the Play button</strong> (▶) at the top center of Unity.
+            </li>
+            <li>
+                <strong>In the Game view</strong> (tab next to Scene), you should see:<br>
+                • A sky gradient (blue at top, darker at bottom)<br>
+                • A red sphere in the center<br>
+                • A chrome sphere to the left<br>
+                • A bright light sphere above
+            </li>
+            <li>
+                <strong>Move the camera</strong> using WASD + mouse (if you have a camera controller) or by selecting the camera and changing its Position in the Inspector.
+            </li>
+        </ol>
+
+        <h2>🖥️ Scene View Toggle</h2>
+        <p>The script has a built-in toggle for rendering in Scene View:</p>
+
+        <div class="code-block">
+            <div class="code-header">
+                <span class="code-lang">C#</span>
+            </div>
+            <pre><code>[ExecuteInEditMode]              <span class="comment">// Makes script run without pressing Play</span>
+[ImageEffectAllowedInSceneView]  <span class="comment">// Allows OnRenderImage in Scene View</span>
+<span class="keyword">public class</span> <span class="type">RayTracingMaster</span> : <span class="type">MonoBehaviour</span>
+{
+    <span class="keyword">public bool</span> renderInSceneView = <span class="keyword">true</span>;  <span class="comment">// Toggle in Inspector!</span>
+}</code></pre>
+        </div>
+
+        <p>To use it:</p>
+        <ul style="margin-left: 2rem; margin-bottom: 1.5rem; color: var(--text-secondary);">
+            <li><strong>Checked (true):</strong> You'll see the ray-traced output in the Scene view even without pressing Play</li>
+            <li><strong>Unchecked (false):</strong> Scene view shows normal Unity rendering (easier to position objects)</li>
+        </ul>
+
+        <div class="tip-box">
+            <h4>🎯 Pro Tip</h4>
+            <p>Keep "Render In Scene View" OFF while editing your scene (so you can see wireframes and gizmos), then turn it ON to preview the ray-traced result without entering Play mode.</p>
+        </div>
+
+        <h2>🧠 Understanding Camera-to-World (The Simple Version)</h2>
+        <p>This is the part that confuses everyone. Let me break it down super simply:</p>
+
+        <h3>The Problem</h3>
+        <p>Your screen is <strong>2D</strong> (pixels have x, y). Your game world is <strong>3D</strong> (objects have x, y, z). How do you turn a pixel into a direction in 3D space?</p>
+
+        <div class="concept-box">
+            <h4>🎬 Analogy: A Movie Projector in Reverse</h4>
+            <p>Imagine a movie projector:</p>
+            <p>• <strong>Film</strong> = your 2D screen (pixels)<br>
+            • <strong>Lens</strong> = the projection matrix (squashes 3D into 2D)<br>
+            • <strong>Screen</strong> = what the player sees</p>
+            <p>Ray tracing does the <strong>opposite</strong>: it starts from the screen and goes BACK through the lens to figure out what 3D direction each pixel represents.</p>
+        </div>
+
+        <h3>The Two Matrices</h3>
+
+        <div class="two-col">
+            <div class="concept-box">
+                <h4>📐 Projection Matrix</h4>
+                <p>This is like your camera lens. It defines:</p>
+                <p>• Field of view (how wide the camera sees)<br>
+                • Aspect ratio (screen width / height)<br>
+                • Near/far clip planes</p>
+                <p>It <strong>squashes</strong> 3D into 2D.</p>
+            </div>
+            <div class="concept-box">
+                <h4>🌍 View Matrix</h4>
+                <p>This is your camera's position and rotation. It defines:</p>
+                <p>• Where the camera is (x, y, z)<br>
+                • Which way it's facing<br>
+                • Which way is "up"</p>
+                <p>It converts <strong>world space → camera space</strong>.</p>
+            </div>
+        </div>
+
+        <h3>What We Need: The INVERSE Matrices</h3>
+        <p>Normal rendering goes: <strong>World → Camera → Screen</strong></p>
+        <p>Ray tracing needs the reverse: <strong>Screen → Camera → World</strong></p>
+
+        <div class="formula">
+            pixel (2D) → inverse projection → camera direction (3D)<br>
+            camera direction → inverse view → world direction (3D)
+        </div>
+
+        <h3>What the Code Actually Does</h3>
+
+        <div class="code-block">
+            <div class="code-header">
+                <span class="code-lang">HLSL</span>
+            </div>
+            <pre><code>Ray CreateRay(float2 uv)
+{
+    <span class="comment">// 1. Pixel [0,1] → Screen space [-1,1]</span>
+    <span class="comment">//    Like saying "center of screen = (0,0)"</span>
+    float3 ndc = float3(uv * 2.0f - 1.0f, 1.0f);
+    
+    <span class="comment">// 2. "Un-squash" using inverse projection</span>
+    <span class="comment">//    Converts 2D screen pos back to 3D camera direction</span>
+    float4 viewPos = mul(_CameraInverseProjection, float4(ndc, 1.0f));
+    viewPos = viewPos / viewPos.w;  <span class="comment">// Perspective fix</span>
+    
+    <span class="comment">// 3. Convert from "camera-relative" to "world-relative"</span>
+    <span class="comment">//    Like rotating the direction to match where camera is facing</span>
+    float3 worldDir = mul(_CameraToWorld, float4(viewPos.xyz, 0.0f)).xyz;
+    worldDir = normalize(worldDir);
+    
+    <span class="comment">// 4. Camera position is stored in the matrix</span>
+    float3 worldOrigin = _CameraToWorld._m03_m13_m23;
+    
+    Ray ray;
+    ray.origin = worldOrigin;      <span class="comment">// Ray starts at camera</span>
+    ray.direction = worldDir;       <span class="comment">// Ray goes in calculated direction</span>
+    <span class="keyword">return</span> ray;
+}</code></pre>
+        </div>
+
+        <div class="concept-box">
+            <h4>🧠 The One-Sentence Summary</h4>
+            <p><code>_CameraInverseProjection</code> turns a pixel into "which direction relative to the camera?" and <code>_CameraToWorld</code> turns that into "which direction in the actual 3D world?"</p>
+        </div>
+
+        <h2>🐛 Common Errors & Fixes</h2>
+
+        <div class="warning-box">
+            <h4>❌ "unrecognized identifier 'Ray'"</h4>
+            <p><strong>Cause:</strong> In HLSL, structs must be defined BEFORE they're used.</p>
+            <p><strong>Fix:</strong> Move the <code>struct Ray { ... }</code> to the TOP of the file, before any functions that use it.</p>
+        </div>
+
+        <div class="warning-box">
+            <h4>❌ "No Camera found!"</h4>
+            <p><strong>Cause:</strong> The script is on a GameObject that doesn't have a Camera component.</p>
+            <p><strong>Fix:</strong> Attach the script ONLY to the Main Camera GameObject.</p>
+        </div>
+
+        <div class="warning-box">
+            <h4>❌ Screen is black / no output</h4>
+            <p><strong>Cause 1:</strong> The shader slot is empty in the Inspector.</p>
+            <p><strong>Fix:</strong> Drag the compute shader into the "Ray Tracing Shader" field.</p>
+            <p><strong>Cause 2:</strong> The camera is inside an object.</p>
+            <p><strong>Fix:</strong> Check camera Position in Inspector — make sure it's at (0, 1, -10) or similar.</p>
+        </div>
+
+        <div class="warning-box">
+            <h4>❌ "Struct size mismatch" or weird colors</h4>
+            <p><strong>Cause:</strong> C# struct doesn't match HLSL struct size.</p>
+            <p><strong>Fix:</strong> Both structs must be exactly 64 bytes. Use padding floats to align to 16-byte boundaries.</p>
+        </div>
+
+        <h2>📚 Keyboard Shortcuts</h2>
+        <div class="two-col">
+            <div class="concept-box">
+                <h4>🎮 Scene Navigation</h4>
+                <p><strong>Right-click + WASD:</strong> Fly camera<br>
+                <strong>Alt + Left Click:</strong> Orbit around selection<br>
+                <strong>Scroll wheel:</strong> Zoom in/out<br>
+                <strong>F:</strong> Focus on selected object</p>
+            </div>
+            <div class="concept-box">
+                <h4>⌨️ General</h4>
+                <p><strong>Ctrl + S:</strong> Save scene<br>
+                <strong>Ctrl + P:</strong> Play/Stop<br>
+                <strong>Ctrl + Shift + N:</strong> New GameObject<br>
+                <strong>Space:</strong> Maximize focused window</p>
+            </div>
+        </div>
+
+        <div class="nav-footer">
+            <a href="../index.html" class="nav-btn">← Back to Home</a>
+            <a href="milestone1.html" class="nav-btn">Start Milestone 1 →</a>
+        </div>
+    </div>
+</body>
+</html>

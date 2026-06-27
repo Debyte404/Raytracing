@@ -1,0 +1,234 @@
+#pragma kernel MainRayGen
+
+struct Ray
+{
+    float3 origin;
+    float3 direction;
+};
+
+struct Sphere
+{
+    float3 position;
+    float radius;
+    float3 albedo;
+    float pad0;
+    float3 specular;
+    float pad1;
+    float3 emission;
+    float pad2;
+};
+
+struct Plane
+{
+    float3 normal;
+    float distance;
+    float3 albedo;
+    float pad0;
+    float3 specular;
+    float pad1;
+    float3 emission;
+    float pad2;
+};
+
+struct RayHit
+{
+    float3 position;
+    float distance;
+    float3 normal;
+    float3 albedo;
+    float3 specular;
+    float3 emission;
+};
+
+RWTexture2D<float4> Result;
+
+float4x4 _CameraToWorld;
+float4x4 _CameraInverseProjection;
+
+StructuredBuffer<Sphere> _Spheres;
+int _SphereCount;
+
+StructuredBuffer<Plane> _Planes;
+int _PlaneCount;
+
+RayHit CreateRayHit()
+{
+    RayHit hit;
+    hit.position = float3(0.0f, 0.0f, 0.0f);
+    hit.distance = 1.#INF;
+    hit.normal = float3(0.0f, 0.0f, 0.0f);
+    hit.albedo = float3(0.0f, 0.0f, 0.0f);
+    hit.specular = float3(0.0f, 0.0f, 0.0f);
+    hit.emission = float3(0.0f, 0.0f, 0.0f);
+    return hit;
+}
+
+Ray CreateRay(float2 uv)
+{
+    float3 ndc = float3(uv * 2.0f - 1.0f, 1.0f);
+
+    float4 viewPos = mul(_CameraInverseProjection, float4(ndc, 1.0f));
+    viewPos = viewPos / viewPos.w;
+
+    float3 worldDir = mul(_CameraToWorld, float4(viewPos.xyz, 0.0f)).xyz;
+    worldDir = normalize(worldDir);
+
+    float3 worldOrigin = _CameraToWorld._m03_m13_m23;
+
+    Ray ray;
+    ray.origin = worldOrigin;
+    ray.direction = worldDir;
+    return ray;
+}
+
+void IntersectSphere(Ray ray, Sphere sphere, inout RayHit bestHit)
+{
+    float3 oc = ray.origin - sphere.position;
+    float a = dot(ray.direction, ray.direction);
+    float b = 2.0f * dot(oc, ray.direction);
+    float c = dot(oc, oc) - sphere.radius * sphere.radius;
+    float discriminant = b * b - 4.0f * a * c;
+
+    if (discriminant < 0.0f)
+        return;
+
+    float sqrtDisc = sqrt(discriminant);
+    float t1 = (-b - sqrtDisc) / (2.0f * a);
+    float t2 = (-b + sqrtDisc) / (2.0f * a);
+
+    float t = t1;
+    if (t < 0.001f)
+        t = t2;
+    if (t < 0.001f)
+        return;
+
+    if (t < bestHit.distance)
+    {
+        bestHit.distance = t;
+        bestHit.position = ray.origin + t * ray.direction;
+        bestHit.normal = normalize(bestHit.position - sphere.position);
+        bestHit.albedo = sphere.albedo;
+        bestHit.specular = sphere.specular;
+        bestHit.emission = sphere.emission;
+    }
+}
+
+void IntersectPlane(Ray ray, Plane plane, inout RayHit bestHit)
+{
+    float denom = dot(ray.direction, plane.normal);
+
+    if (abs(denom) < 0.0001f)
+        return;
+
+    float t = (plane.distance - dot(ray.origin, plane.normal)) / denom;
+
+    if (t < 0.001f || t >= bestHit.distance)
+        return;
+
+    bestHit.distance = t;
+    bestHit.position = ray.origin + t * ray.direction;
+    bestHit.normal = plane.normal;
+    bestHit.albedo = plane.albedo;
+    bestHit.specular = plane.specular;
+    bestHit.emission = plane.emission;
+}
+
+float3 GetSkyColor(Ray ray)
+{
+    // Darker sky - deep blue to near black
+    float t = 0.5f * (ray.direction.y + 1.0f);
+    return lerp(float3(0.02f, 0.05f, 0.15f), float3(0.0f, 0.01f, 0.05f), t);
+}
+
+float3 Shade(RayHit hit, Ray ray)
+{
+    // Light position - matches the emissive sphere in C#
+    float3 lightPos = float3(1.5f, 2.0f, 2.0f);
+    float3 lightColor = float3(1.0f, 0.9f, 0.7f);
+    
+    // Direction from surface TO light
+    float3 lightDir = normalize(lightPos - hit.position);
+    
+    // Lambertian diffuse
+    float NdotL = max(0.0f, dot(hit.normal, lightDir));
+    float3 diffuse = hit.albedo * lightColor * NdotL;
+    
+    // Ambient (base light even in shadow)
+    float3 ambient = hit.albedo * 0.08f;
+    
+    // Distance-based glow from emissive light source
+    float distToLight = length(lightPos - hit.position);
+    float attenuation = 1.0f / (1.0f + distToLight * distToLight * 0.3f);
+    float3 glow = hit.albedo * lightColor * attenuation * 0.8f;
+    
+    return diffuse + ambient + glow;
+}
+
+float3 Reflect(float3 direction, float3 normal)
+{
+    return direction - 2.0f * dot(direction, normal) * normal;
+}
+
+float3 TraceRay(Ray ray)
+{
+    float3 finalColor = float3(0, 0, 0);
+    float3 throughput = float3(1, 1, 1);
+
+    for (int bounce = 0; bounce < 4; bounce++)
+    {
+        RayHit hit = CreateRayHit();
+
+        // Test spheres
+        for (int s = 0; s < _SphereCount; s++)
+        {
+            IntersectSphere(ray, _Spheres[s], hit);
+        }
+
+        // Test planes
+        for (int p = 0; p < _PlaneCount; p++)
+        {
+            IntersectPlane(ray, _Planes[p], hit);
+        }
+
+        // Sky
+        if (hit.distance >= 1.#INF)
+        {
+            finalColor += throughput * GetSkyColor(ray);
+            break;
+        }
+
+        // Emissive
+        if (length(hit.emission) > 0.01f)
+        {
+            finalColor += throughput * hit.emission;
+            break;
+        }
+
+        // Shade
+        float3 shadedColor = Shade(hit, ray);
+        float specMax = max(hit.specular.x, max(hit.specular.y, hit.specular.z));
+        finalColor += throughput * shadedColor * (1.0f - specMax);
+
+        if (specMax < 0.01f)
+            break;
+
+        throughput *= hit.specular;
+        ray.origin = hit.position + hit.normal * 0.001f;
+        ray.direction = Reflect(ray.direction, hit.normal);
+    }
+
+    return finalColor;
+}
+
+[numthreads(8, 8, 1)]
+void MainRayGen(uint3 id : SV_DispatchThreadID)
+{
+    uint width, height;
+    Result.GetDimensions(width, height);
+    float2 uv = float2(id.x / (float)width, id.y / (float)height);
+
+    Ray ray = CreateRay(uv);
+    float3 color = TraceRay(ray);
+
+    Result[id.xy] = float4(color, 1.0f);
+}

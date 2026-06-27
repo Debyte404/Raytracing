@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compute Shaders 101 — From Hello World to Ray Tracing</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #1a2332;
+            --bg-code: #0d1117;
+            --accent-cyan: #22d3ee;
+            --accent-purple: #a855f7;
+            --accent-pink: #ec4899;
+            --accent-green: #22c55e;
+            --accent-orange: #f97316;
+            --accent-yellow: #eab308;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #1e293b;
+            --gradient-1: linear-gradient(135deg, #22d3ee 0%, #a855f7 50%, #ec4899 100%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+
+        .bg-grid {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image:
+                linear-gradient(rgba(34, 211, 238, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(34, 211, 238, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            background: rgba(10, 14, 23, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1000;
+            padding: 0 2rem;
+        }
+
+        .nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover { color: var(--accent-cyan); }
+
+        .content {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 8rem 2rem 4rem;
+        }
+
+        h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin: 3rem 0 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 2rem 0 1rem;
+            color: var(--accent-cyan);
+        }
+
+        p {
+            margin-bottom: 1.25rem;
+            color: var(--text-secondary);
+        }
+
+        .concept-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .concept-box h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .concept-box p { margin-bottom: 0; font-size: 0.95rem; }
+
+        .formula {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            color: var(--accent-cyan);
+            background: var(--bg-code);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin: 1rem 0;
+            text-align: center;
+        }
+
+        .code-block {
+            background: var(--bg-code);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 1.5rem 0;
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            background: rgba(255,255,255,0.02);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .code-lang {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .code-copy {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: color 0.3s;
+        }
+
+        .code-copy:hover { color: var(--accent-cyan); }
+
+        pre {
+            padding: 1.25rem;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-primary);
+        }
+
+        .comment { color: #6b7280; }
+        .keyword { color: #c678dd; }
+        .type { color: #e5c07b; }
+        .function { color: #61afef; }
+        .string { color: #98c379; }
+        .number { color: #d19a66; }
+
+        .step-list {
+            list-style: none;
+            counter-reset: step;
+        }
+
+        .step-list li {
+            position: relative;
+            padding-left: 3.5rem;
+            margin-bottom: 2rem;
+            min-height: 3rem;
+        }
+
+        .step-list li::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(34, 211, 238, 0.15);
+            color: var(--accent-cyan);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .tip-box {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+        }
+
+        .tip-box h4 {
+            color: var(--accent-green);
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .tip-box p { margin-bottom: 0; font-size: 0.9rem; }
+
+        .warning-box {
+            background: rgba(249, 115, 22, 0.1);
+            border: 1px solid rgba(249, 115, 22, 0.2);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+        }
+
+        .warning-box h4 {
+            color: var(--accent-orange);
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .warning-box p { margin-bottom: 0; font-size: 0.9rem; }
+
+        .nav-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .nav-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        .analogy-box {
+            background: linear-gradient(135deg, rgba(168,85,247,0.1), rgba(236,72,153,0.1));
+            border: 1px solid rgba(168,85,247,0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .analogy-box h4 {
+            color: var(--accent-purple);
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .analogy-box p { margin-bottom: 0; }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    
+    <nav>
+        <div class="nav-content">
+            <div class="logo">&lt;RayTrace /&gt;</div>
+            <ul class="nav-links">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="milestone1.html">M1</a></li>
+                <li><a href="milestone2.html">M2</a></li>
+                <li><a href="milestone3.html">M3</a></li>
+                <li><a href="milestone4.html">M4</a></li>
+                <li><a href="milestone5.html">M5</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="content">
+        <h1>Compute Shaders 101</h1>
+        <p class="subtitle">Learn GPU compute programming from absolute zero — starting with "Hello World" and building up to understanding our ray tracer.</p>
+
+        <h2>🤔 What IS a Compute Shader?</h2>
+        
+        <div class="analogy-box">
+            <h4>🎬 Analogy: The Factory Assembly Line</h4>
+            <p>Imagine a factory that paints toy cars:</p>
+            <p><strong>CPU (Normal C# code):</strong> One worker paints one car at a time. 1000 cars = 1000 sequential steps.</p>
+            <p><strong>GPU (Compute Shader):</strong> 1000 workers each paint one car simultaneously. Done in one step!</p>
+        </div>
+
+        <p>A compute shader is a program that runs on your <strong>graphics card (GPU)</strong> instead of your processor (CPU). The GPU has thousands of tiny cores that can all work at the same time — perfect for doing the same calculation on millions of pixels.</p>
+
+        <div class="concept-box">
+            <h4>💡 When to Use Compute Shaders</h4>
+            <p>• Processing every pixel on screen (image effects, ray tracing)<br>
+            • Particle simulations (thousands of particles)<br>
+            • Physics calculations (cloth, fluid)<br>
+            • Machine learning inference<br>
+            • Any problem where you do the SAME thing many times</p>
+        </div>
+
+        <h2>📐 Key Concepts</h2>
+
+        <h3>1. Threads, Thread Groups, and Kernels</h3>
+
+        <div class="formula">
+            Kernel = The function that runs on the GPU<br>
+            Thread = One instance of that function<br>
+            Thread Group = A bundle of threads (e.g., 8×8 = 64 threads)
+        </div>
+
+        <div class="analogy-box">
+            <h4>🎬 Analogy: Painting a Wall</h4>
+            <p>• <strong>Kernel</strong> = "Paint this square blue" (the instruction)<br>
+            • <strong>Thread</strong> = One painter painting one square<br>
+            • <strong>Thread Group</strong> = A team of 64 painters working on one section<br>
+            • <strong>Dispatch</strong> = Telling all teams to start painting</p>
+        </div>
+
+        <h3>2. The Dispatch Call</h3>
+        <p>In C#, you "dispatch" the compute shader:</p>
+
+        <div class="code-block">
+            <div class="code-header"><span class="code-lang">C#</span></div>
+            <pre><code><span class="comment">// Dispatch 10 groups of 64 threads each = 640 total threads</span>
+computeShader.Dispatch(kernelIndex, <span class="number">10</span>, <span class="number">1</span>, <span class="number">1</span>);
+
+<span class="comment">// For a 1920x1080 screen with 8x8 thread groups:</span>
+<span class="comment">// GroupsX = ceil(1920 / 8) = 240</span>
+<span class="comment">// GroupsY = ceil(1080 / 8) = 135</span>
+<span class="comment">// Total threads = 240 * 135 * 64 = 2,073,600 (one per pixel!)</span></code></pre>
+        </div>
+
+        <h3>3. How Each Thread Knows Which Pixel to Process</h3>
+
+        <div class="code-block">
+            <div class="code-header"><span class="code-lang">HLSL</span></div>
+            <pre><code>[<span class="type">numthreads</span>(<span class="number">8</span>, <span class="number">8</span>, <span class="number">1</span>)]
+<span class="keyword">void</span> <span class="function">Main</span>(<span class="type">uint3</span> id : <span class="type">SV_DispatchThreadID</span>)
+{
+    <span class="comment">// id.x = which column (0 to screen width)</span>
+    <span class="comment">// id.y = which row (0 to screen height)</span>
+    <span class="comment">// id.z = which slice (usually 0 for 2D images)</span>
+    
+    <span class="comment">// This thread handles pixel (id.x, id.y)</span>
+    Result[id.xy] = <span class="function">float4</span>(<span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>);  <span class="comment">// Red pixel!</span>
+}</code></pre>
+        </div>
+
+        <div class="concept-box">
+            <h4>🔍 The Magic of SV_DispatchThreadID</h4>
+            <p>This is a special "system value" that Unity automatically fills in. Every thread gets a unique (x,y,z) ID. For a 2D image, we only care about x and y — they directly map to pixel coordinates!</p>
+        </div>
+
+        <h2>🚀 Tutorial 1: "Hello World" Compute Shader</h2>
+        <p>Let's create the simplest possible compute shader — one that fills the screen with a color gradient.</p>
+
+        <h3>Step 1: Create the Compute Shader</h3>
+        <ol class="step-list">
+            <li>In Unity, right-click Project window → <strong>Create → Shader → Compute Shader</strong></li>
+            <li>Name it <strong>"HelloWorldCompute"</strong></li>
+            <li>Double-click to open and <strong>replace ALL content</strong> with:</li>
+        </ol>
+
+        <div class="code-block">
+            <div class="code-header"><span class="code-lang">HLSL (HelloWorldCompute.compute)</span></div>
+            <pre><code><span class="comment">// Declare the kernel name - REQUIRED</span>
+<span class="keyword">#pragma</span> kernel HelloWorld
+
+<span class="comment">// Output texture - the GPU writes pixel colors here</span>
+<span class="comment">// "RW" means Read-Write (we can read AND write)</span>
+<span class="comment">// "float4" = RGBA (4 channels, each is a float)</span>
+<span class="type">RWTexture2D</span>&lt;<span class="type">float4</span>&gt; Result;
+
+<span class="comment">// The kernel function - this runs once per thread</span>
+<span class="comment">// [numthreads(8,8,1)] means each group has 8x8 threads</span>
+[<span class="type">numthreads</span>(<span class="number">8</span>, <span class="number">8</span>, <span class="number">1</span>)]
+<span class="keyword">void</span> <span class="function">HelloWorld</span>(<span class="type">uint3</span> id : <span class="type">SV_DispatchThreadID</span>)
+{
+    <span class="comment">// Get the texture dimensions</span>
+    <span class="type">uint</span> width, height;
+    Result.<span class="function">GetDimensions</span>(width, height);
+    
+    <span class="comment">// Convert pixel ID to UV coordinates [0, 1]</span>
+    <span class="type">float2</span> uv = <span class="function">float2</span>(id.x / (<span class="keyword">float</span>)width, id.y / (<span class="keyword">float</span>)height);
+    
+    <span class="comment">// Create a gradient: red on left, green on bottom</span>
+    <span class="type">float3</span> color = <span class="function">float3</span>(uv.x, uv.y, <span class="number">0.5</span>);
+    
+    <span class="comment">// Write the color to the output texture</span>
+    <span class="comment">// id.xy = (x, y) pixel coordinate</span>
+    Result[id.xy] = <span class="function">float4</span>(color, <span class="number">1.0</span>);
+}</code></pre>
+        </div>
+
+        <h3>Step 2: Create the C# Controller</h3>
+        <ol class="step-list">
+            <li>Right-click Project window → <strong>Create → C# Script</strong></li>
+            <li>Name it <strong>"HelloWorldController"</strong></li>
+            <li>Double-click to open and replace ALL content:</li>
+        </ol>
+
+        <div class="code-block">
+            <div class="code-header"><span class="code-lang">C# (HelloWorldController.cs)</span></div>
+            <pre><code><span class="keyword">using</span> UnityEngine;
+
+<span class="keyword">public class</span> <span class="type">HelloWorldController</span> : <span class="type">MonoBehaviour</span>
+{
+    <span class="comment">// Drag your compute shader here in the Inspector</span>
+    <span class="keyword">public</span> <span class="type">ComputeShader</span> helloWorldShader;
+    
+    <span class="comment">// Where we'll store the GPU output</span>
+    <span class="keyword">private</span> <span class="type">RenderTexture</span> target;
+    
+    <span class="comment">// The kernel index (we'll look it up by name)</span>
+    <span class="keyword">private int</span> kernelIndex = -<span class="number">1</span>;
+
+    <span class="keyword">void</span> <span class="function">Start</span>()
+    {
+        <span class="comment">// Find the kernel by name (must match #pragma kernel)</span>
+        kernelIndex = helloWorldShader.<span class="function">FindKernel</span>(<span class="string">"HelloWorld"</span>);
+        
+        <span class="keyword">if</span> (kernelIndex &lt; <span class="number">0</span>)
+        {
+            Debug.<span class="function">LogError</span>(<span class="string">"Kernel not found!"</span>);
+            <span class="keyword">return</span>;
+        }
+        
+        Debug.<span class="function">Log</span>(<span class="string">$"Found kernel at index {kernelIndex}"</span>);
+    }
+
+    <span class="keyword">void</span> <span class="function">OnRenderImage</span>(<span class="type">RenderTexture</span> source, <span class="type">RenderTexture</span> destination)
+    {
+        <span class="comment">// Create the output texture if it doesn't exist</span>
+        <span class="keyword">if</span> (target == <span class="keyword">null</span>)
+        {
+            target = <span class="keyword">new</span> <span class="type">RenderTexture</span>(<span class="number">256</span>, <span class="number">256</span>, <span class="number">0</span>);
+            target.enableRandomWrite = <span class="keyword">true</span>;  <span class="comment">// REQUIRED for compute shaders!</span>
+            target.<span class="function">Create</span>();
+        }
+        
+        <span class="comment">// Tell the shader to write to 'target'</span>
+        helloWorldShader.<span class="function">SetTexture</span>(kernelIndex, <span class="string">"Result"</span>, target);
+        
+        <span class="comment">// Dispatch!</span>
+        <span class="comment">// 256x256 pixels / 8x8 threads per group = 32x32 groups</span>
+        helloWorldShader.<span class="function">Dispatch</span>(kernelIndex, <span class="number">32</span>, <span class="number">32</span>, <span class="number">1</span>);
+        
+        <span class="comment">// Copy result to screen</span>
+        Graphics.<span class="function">Blit</span>(target, destination);
+    }
+    
+    <span class="keyword">void</span> <span class="function">OnDestroy</span>()
+    {
+        <span class="comment">// Clean up</span>
+        <span class="keyword">if</span> (target != <span class="keyword">null</span>) target.<span class="function">Release</span>();
+    }
+}</code></pre>
+        </div>
+
+        <h3>Step 3: Set Up in Unity</h3>
+        <ol class="step-list">
+            <li>Create an empty GameObject: <strong>GameObject → Create Empty</strong>, name it "HelloWorld"</li>
+            <li>Drag <strong>HelloWorldController</strong> script onto it</li>
+            <li>In the Inspector, drag <strong>HelloWorldCompute</strong> into the "Hello World Shader" slot</li>
+            <li>Press <strong>Play</strong> — you should see a colorful gradient!</li>
+        </ol>
+
+        <div class="tip-box">
+            <h4>🎯 What You Just Learned</h4>
+            <p>• <code>#pragma kernel</code> declares an entry point<br>
+            • <code>RWTexture2D</code> is how GPU writes to images<br>
+            • <code>SV_DispatchThreadID</code> gives each thread its pixel coordinate<br>
+            • <code>Dispatch()</code> launches all threads<br>
+            • <code>enableRandomWrite = true</code> is REQUIRED</p>
+        </div>
+
+        <h2>🚀 Tutorial 2: Passing Data from C# to GPU</h2>
+        <p>Now let's send data from C# to the shader — like mouse position or a time value.</p>
+
+        <div class="code-block">
+            <div class="code-header"><span class="code-lang">HLSL</span></div>
+            <pre><code><span class="keyword">#pragma</span> kernel AnimatedGradient
+
+<span class="type">RWTexture2D</span>&lt;<span class="type">float4</span>&gt; Result;
+
+<span class="comment">// Variables sent from C#</span>
+<span class="type">float</span> _Time;        <span class="comment">// Current time</span>
+<span class="type">float2</span> _MousePos;   <span class="comment">// Mouse position [0,1]</span>
+
+[<span class="type">numthreads</span>(<span class="number">8</span>, <span class="number">8</span>, <span class="number">1</span>)]
+<span class="keyword">void</span> <span class="function">AnimatedGradient</span>(<span class="type">uint3</span> id : <span class="type">SV_DispatchThreadID</span>)
+{
+    <span class="type">uint</span> width, height;
+    Result.<span class="function">GetDimensions</span>(width, height);
+    <span class="type">float2</span> uv = <span class="function">float2</span>(id.x / (<span class="keyword">float</span>)width, id.y / (<span class="keyword">float</span>)height);
+    
+    <span class="comment">// Animate colors over time</span>
+    <span class="type">float</span> r = <span class="function">sin</span>(uv.x * <span class="number">10</span> + _Time) * <span class="number">0.5</span> + <span class="number">0.5</span>;
+    <span class="type">float</span> g = <span class="function">sin</span>(uv.y * <span class="number">10</span> + _Time * <span class="number">1.5</span>) * <span class="number">0.5</span> + <span class="number">0.5</span>;
+    <span class="type">float</span> b = <span class="function">sin</span>((uv.x + uv.y) * <span class="number">5</span> + _Time * <span class="number">0.5</span>) * <span class="number">0.5</span> + <span class="number">0.5</span>;
+    
+    <span class="comment">// Mouse interaction: draw circle at mouse position</span>
+    <span class="type">float</span> dist = <span class="function">length</span>(uv - _MousePos);
+    <span class="keyword">if</span> (dist &lt; <span class="number">0.05</span>)
+    {
+        r = <span class="number">1</span>; g = <span class="number">1</span>; b = <span class="number">1</span>;  <span class="comment">// White circle at mouse</span>
+    }
+    
+    Result[id.xy] = <span class="function">float4</span>(r, g, b, <span class="number">1</span>);
+}</code></pre>
+        </div>
+
+        <div class="code-block">
+            <div class="code-header"><span class="code-lang">C#</span></div>
+            <pre><code><span class="keyword">void</span> <span class="function">OnRenderImage</span>(<span class="type">RenderTexture</span> source, <span class="type">RenderTexture</span> destination)
+{
+    <span class="comment">// Send data to shader BEFORE dispatching</span>
+    helloWorldShader.<span class="function">SetFloat</span>(<span class="string">"_Time"</span>, Time.time);
+    
+    <span class="comment">// Get mouse position in [0,1] range</span>
+    <span class="type">Vector2</span> mousePos = Input.mousePosition;
+    mousePos.x /= Screen.width;
+    mousePos.y /= Screen.height;
+    helloWorldShader.<span class="function">SetVector</span>(<span class="string">"_MousePos"</span>, <span class="keyword">new</span> <span class="type">Vector4</span>(mousePos.x, mousePos.y, <span class="number">0</span>, <span class="number">0</span>));
+    
+    <span class="comment">// ... dispatch as before ...</span>
+}</code></pre>
+        </div>
+
+        <h2>🚀 Tutorial 3: Structured Buffers (Sending Arrays)</h2>
+        <p>For complex data like spheres, particles, or mesh vertices, use StructuredBuffers:</p>
+
+        <div class="code-block">
+            <div class="code-header"><span class="code-lang">HLSL</span></div>
+            <pre><code><span class="keyword">struct</span> <span class="type">Particle</span>
+{
+    <span class="type">float3</span> position;
+    <span class="type">float3</span> velocity;
+    <span class="type">float</span> life;
+};
+
+<span class="comment">// A buffer of particles - like an array on the GPU</span>
+<span class="type">StructuredBuffer</span>&lt;<span class="type">Particle</span>&gt; _Particles;
+<span class="type">int</span> _ParticleCount;</span></code></pre>
+        </div>
+
+        <div class="code-block">
+            <div class="code-header"><span class="code-lang">C#</span></div>
+            <pre><code><span class="comment">// Create a buffer that holds 1000 particles, each 28 bytes</span>
+<span class="type">ComputeBuffer</span> particleBuffer = <span class="keyword">new</span> <span class="type">ComputeBuffer</span>(<span class="number">1000</span>, <span class="number">28</span>);
+
+<span class="comment">// Fill it with data</span>
+<span class="type">Particle</span>[] particles = <span class="keyword">new</span> <span class="type">Particle</span>[<span class="number">1000</span>];
+<span class="comment">// ... fill the array ...</span>
+particleBuffer.<span class="function">SetData</span>(particles);
+
+<span class="comment">// Send to shader</span>
+shader.<span class="function">SetBuffer</span>(kernelIndex, <span class="string">"_Particles"</span>, particleBuffer);
+shader.<span class="function">SetInt</span>(<span class="string">"_ParticleCount"</span>, particles.Length);
+
+<span class="comment">// CRITICAL: Release when done to prevent memory leak!</span>
+particleBuffer.<span class="function">Release</span>();</code></pre>
+        </div>
+
+        <div class="warning-box">
+            <h4>⚠️ Memory Leak Warning</h4>
+            <p>ComputeBuffers allocate GPU memory. If you don't call <code>.Release()</code>, that memory stays allocated forever. Always release buffers in <code>OnDestroy()</code> or when recreating them.</p>
+        </div>
+
+        <h2>🔑 The Complete Pipeline (Summary)</h2>
+
+        <div class="concept-box">
+            <h4>📋 Step-by-Step Compute Shader Flow</h4>
+            <p><strong>1. C# Setup:</strong> Find kernel, create buffers, set data<br>
+            <strong>2. C# Per Frame:</strong> Update uniforms (time, matrices, etc.)<br>
+            <strong>3. C# Dispatch:</strong> Tell GPU to run X×Y×Z thread groups<br>
+            <strong>4. GPU Execution:</strong> Thousands of threads run in parallel<br>
+            <strong>5. GPU Output:</strong> Threads write to textures/buffers<br>
+            <strong>6. C# Read:</strong> Blit texture to screen, or read buffer data</p>
+        </div>
+
+        <h2>📚 Common HLSL vs C# Differences</h2>
+
+        <div class="code-block">
+            <div class="code-header"><span class="code-lang">Comparison</span></div>
+            <pre><code>| Concept        | HLSL (GPU)              | C# (CPU)              |
+|----------------|-------------------------|-----------------------|
+| Vector access  | v.x, v.y, v.z, v.w     | v.x, v.y, v.z         |
+| Color access   | c.r, c.g, c.b, c.a     | Not available         |
+| Swizzling      | pos.xyz, color.rgb     | Not available         |
+| Length         | length(v)              | v.magnitude           |
+| Normalize      | normalize(v)           | v.normalized          |
+| Dot product    | dot(a, b)              | Vector3.Dot(a, b)     |
+| Lerp           | lerp(a, b, t)          | Mathf.Lerp(a, b, t)   |
+| Clamp          | clamp(x, 0, 1)         | Mathf.Clamp(x, 0, 1)  |
+| Sqrt           | sqrt(x)                | Mathf.Sqrt(x)         |
+| Infinity       | 1.#INF                 | float.PositiveInfinity|</code></pre>
+        </div>
+
+        <h2>🎯 Next Steps</h2>
+        <p>Now that you understand compute shaders, you can:</p>
+        <ol style="margin-left: 2rem; margin-bottom: 1.5rem; color: var(--text-secondary);">
+            <li>Go back to <a href="milestone1.html" style="color: var(--accent-cyan);">Milestone 1</a> and understand the ray generation shader</li>
+            <li>Modify the Hello World shader to draw shapes (circles, rectangles)</li>
+            <li>Try sending an array of 10 points and drawing them</li>
+            <li>Experiment with the math — sin, cos, distance, etc.</li>
+        </ol>
+
+        <div class="nav-footer">
+            <a href="../index.html" class="nav-btn">← Back to Home</a>
+            <a href="milestone1.html" class="nav-btn">Milestone 1: Ray Generation →</a>
+        </div>
+    </div>
+
+    <script>
+        function copyCode(btn) {
+            const code = btn.closest('.code-block').querySelector('code').innerText;
+            navigator.clipboard.writeText(code);
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = 'Copy', 2000);
+        }
+    </script>
+</body>
+</html>

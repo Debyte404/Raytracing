@@ -1,0 +1,42 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel HelloWorld
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<float4> Result;
+
+struct Ray
+{
+    float3 rayOrigin;
+    float3 rayDir;
+};
+
+float3 SkyColor(float3 rayDirection)
+{
+    float t = rayDirection.y * 0.5 + 0.5;
+    return lerp(float3(1, 1, 1), float3(0.45, 0.7, 1.0), t);
+}
+
+[numthreads(8, 8, 1)]
+void HelloWorld(uint3 id : SV_DispatchThreadID)
+{
+    uint width, height;
+    Result.GetDimensions(width, height);
+
+    if (id.x >= width || id.y >= height)
+    {
+        return;
+    }
+
+    float2 uv = float2(id.x / (float) width, id.y / (float) height);
+
+    float2 screen = uv * 2.0 - 1.0;
+    float3 color = float3(uv.x, uv.y, 0);
+    
+    Ray ray1;
+    
+    ray1.rayOrigin = float3(0, 0, 0);
+    ray1.rayDir = normalize(float3(screen.x, screen.y, 1));
+
+    Result[id.xy] = float4(SkyColor(ray1.rayDir), 1);
+}
