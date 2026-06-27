@@ -1,6 +1,6 @@
 # Raytracing Lab Tutorial Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+Archived implementation note for the Unity raytracing learning lab and tutorial set. The checklist below records what was built and why.
 
 **Goal:** Build a beginner-friendly Unity ray tracing lab and expanded HTML tutorial inspired by Sebastian Lague's ray tracing video.
 
@@ -40,7 +40,7 @@ The existing camera already contains `RayDirectionVisualizer`. Add the new visua
 ### Task 3: Expand Tutorial Article
 
 **Files:**
-- Modify: `compute-shaders-raytracing-tutorial.html`
+- Modify: `docs/tutorials/unity-compute-shader-raytracing.md`
 
 - [x] **Step 1: Add a "guided lab" roadmap**
 
