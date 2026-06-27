@@ -6,15 +6,13 @@ This project is inspired by Sebastian Lague's wonderful video [Coding Adventure:
 
 ## 📸 Screenshots
 
-Paste your screenshots into `docs/images/` and update these image paths.
-
-| Scene View | Game View |
+| First raytraced view | World coordinates |
 | --- | --- |
-| ![Scene View placeholder](docs/images/scene-view.png) | ![Game View placeholder](docs/images/game-view.png) |
+| ![First raytraced view](docs/images/firstvision.jpeg) | ![World coordinates visualization](docs/images/worldcoordinates.jpeg) |
 
-| Material Inspector | Compute Shader Result |
+| Ray visualization | Material application |
 | --- | --- |
-| ![Material Inspector placeholder](docs/images/material-inspector.png) | ![Compute Shader Result placeholder](docs/images/compute-shader-result.png) |
+| ![Ray visualization](docs/images/rays.jpeg) | ![Material application](docs/images/materialapplication.jpeg) |
 
 ## ✨ What It Does
 
@@ -164,4 +162,3 @@ Next ideas:
 ## 🙏 Credit
 
 Inspired by Sebastian Lague's [Coding Adventure: Ray Tracing](https://www.youtube.com/watch?v=Qz0KTGYJtUk). His video made the raytracing concepts feel approachable, and this repo is my Unity-based learning version of those ideas.
-

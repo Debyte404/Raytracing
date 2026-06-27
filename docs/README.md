@@ -19,12 +19,11 @@ docs/
 
 ## Screenshot Filenames
 
-Use these names if you want the root README image slots to work immediately:
+Current README screenshot files:
 
 ```text
-docs/images/scene-view.png
-docs/images/game-view.png
-docs/images/material-inspector.png
-docs/images/compute-shader-result.png
+docs/images/firstvision.jpeg
+docs/images/worldcoordinates.jpeg
+docs/images/rays.jpeg
+docs/images/materialapplication.jpeg
 ```
-
