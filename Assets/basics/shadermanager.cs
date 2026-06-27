@@ -1,4 +1,7 @@
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 [ExecuteAlways]
 [ImageEffectAllowedInSceneView]
@@ -41,6 +44,13 @@ public class shadermanager : MonoBehaviour
     {
         cam = GetComponent<Camera>();
         RefreshKernel();
+        ReleaseSphereBuffer();
+        ReleaseTargetTexture();
+
+#if UNITY_EDITOR
+        EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+        SceneView.RepaintAll();
+#endif
     }
 
     void OnValidate()
@@ -107,7 +117,7 @@ public class shadermanager : MonoBehaviour
             sphereDataIndex++;
         }
 
-        if (sphereBuffer == null || sphereBuffer.count != sphereData.Length)
+        if (sphereBuffer == null || !sphereBuffer.IsValid() || sphereBuffer.count != sphereData.Length)
         {
             ReleaseSphereBuffer();
             sphereBuffer = new ComputeBuffer(sphereData.Length, sizeof(float) * 12);
@@ -143,9 +153,16 @@ public class shadermanager : MonoBehaviour
 
         UpdateSphereBuffer();
 
-        testingshader.SetVector("_CameraPosition", cam.transform.position);
-        testingshader.SetMatrix("_CameraToWorld", cam.cameraToWorldMatrix);
-        testingshader.SetMatrix("_CameraInverseProjection", cam.projectionMatrix.inverse);
+        Camera renderCamera = Camera.current != null ? Camera.current : cam;
+        if (renderCamera == null)
+        {
+            Graphics.Blit(src, dst);
+            return;
+        }
+
+        testingshader.SetVector("_CameraPosition", renderCamera.transform.position);
+        testingshader.SetMatrix("_CameraToWorld", renderCamera.cameraToWorldMatrix);
+        testingshader.SetMatrix("_CameraInverseProjection", renderCamera.projectionMatrix.inverse);
 
         //Camera rayCamera = Camera.main != null ? Camera.main : cam;
 
@@ -188,19 +205,11 @@ public class shadermanager : MonoBehaviour
 
     void EnsureTargetTexture(int width, int height)
     {
-        if (renderTexture == null || renderTexture.width != width || renderTexture.height != height)
+        if (renderTexture == null || !renderTexture.IsCreated() || renderTexture.width != width || renderTexture.height != height)
         {
             if (renderTexture != null)
             {
-                renderTexture.Release();
-                if (Application.isPlaying)
-                {
-                    Destroy(renderTexture);
-                }
-                else
-                {
-                    DestroyImmediate(renderTexture);
-                }
+                ReleaseTargetTexture();
             }
 
             renderTexture = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32)
@@ -210,6 +219,18 @@ public class shadermanager : MonoBehaviour
             renderTexture.Create();
         }
     }
+
+#if UNITY_EDITOR
+    void OnPlayModeStateChanged(PlayModeStateChange state)
+    {
+        if (state == PlayModeStateChange.ExitingPlayMode || state == PlayModeStateChange.EnteredEditMode)
+        {
+            ReleaseSphereBuffer();
+            ReleaseTargetTexture();
+            SceneView.RepaintAll();
+        }
+    }
+#endif
 
     void ReleaseSphereBuffer()
     {
@@ -241,8 +262,15 @@ public class shadermanager : MonoBehaviour
 
     void OnDisable()
     {
+#if UNITY_EDITOR
+        EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+#endif
         ReleaseSphereBuffer();
         ReleaseTargetTexture();
+
+#if UNITY_EDITOR
+        SceneView.RepaintAll();
+#endif
     }
 
     void OnDestroy()
